@@ -15,21 +15,18 @@ if exist('fig_NuPe')
     end
 end
 %% Options and Preperation
-% datapath
-input.datapath='C:\Users\rexer\MATLAB Drive\data\Heattransfer';
+
 % number of orders to bee evaluated (first order is neccesary)
 neval=4;
 
 %% Reading the measurement data
-[measureData, input] = getMeasureData(input);
-if isfield(measureData(1),'istweg_ungefiltert')
-for jj=1:length(measureData)
-                measureData(jj).z=measureData(jj).istweg_ungefiltert;
-end
-end
+measureData = getMeasureData(input);
+
                 
 % reading parameter and adapting gas parameters to load pressure
-param=getParam();
+ getTestrigParameter
+
+ getUncertaintyParameter
 param.gamma.pressure=mean(measureData(1).druck_gas);
 [param.gamma.value,~,param.cp.value]=getIsentropicExp(param.gamma.pressure*100000);
 %% Adapt measurement data
