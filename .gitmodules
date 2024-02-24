@@ -1,0 +1,4 @@
+[submodule "frequency-domain-errors-from-systematic-sensor-errors-package-matlabc"]
+    path = frequency-domain-errors-from-systematic-sensor-errors-package-matlab
+    url = https://git.rwth-aachen.de/fst-tuda/public/frequency-domain-errors-from-systematic-sensor-errors-package-matlab.git
+    branch = development_dissertation
