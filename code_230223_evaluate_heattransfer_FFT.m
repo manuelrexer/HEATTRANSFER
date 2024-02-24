@@ -20,13 +20,13 @@ end
 neval=4;
 
 %% Reading the measurement data
-measureData = getMeasureData(input);
+measureData = getMeasureData();
 
                 
 % reading parameter and adapting gas parameters to load pressure
- getTestrigParameter
+%  getTestrigParameter
 
- getUncertaintyParameter
+%  getUncertaintyParameter
 param.gamma.pressure=mean(measureData(1).druck_gas);
 [param.gamma.value,~,param.cp.value]=getIsentropicExp(param.gamma.pressure*100000);
 %% Adapt measurement data
@@ -38,33 +38,51 @@ param.gamma.pressure=mean(measureData(1).druck_gas);
 
 % Volume Data
 if isfield(measureData, 'Volume')
-    input.eveluate(1).fieldname='Volume';
+    fieldname.volume='Volume';
 else
-    input=getSelectedFields(input);
-    input.eveluate(1).fieldname=input.selectedfields{end};
+    fieldname.volume=getSelectedFields(measureData,'Select volume field');
 end
-input.eveluate(1).name='volume';
-input.eveluate(1).variable='V';
+volume.name='volume';
+volume.variable='V';
+for ii=1:length(measureData)
+    volume(ii).value=measureData(ii).(fieldname.volume{1}).value;
+end
 
 % pressure Data
-if isfield(measureData, 'druck_gas')
-    input.eveluate(2).fieldname='druck_gas';
+if isfield(measureData, 'pressure_gas')
+    fieldname.pressure={'pressure_gas'};
 else
-    input=getSelectedFields(input);
-    input.eveluate(2).fieldname=input.selectedfields{end};
+    fieldname.pressure=getSelectedFields(measureData, 'select pressure:');
 end
-input.eveluate(2).name='pressure';
-input.eveluate(2).variable='p';
+
+pressure.name='pressure';
+pressure.variable='p';
+for ii=1:length(measureData)
+    pressure(ii).value=measureData(ii).(fieldname.pressure{1}).value;
+end
 
 % temperature Data
-if isfield(measureData, 'temperatur_gas')
-    input.eveluate(3).fieldname='temperatur_gas';
+if isfield(measureData, 'temperature_gas')
+    fieldname.temperature={'temperature_gas'};
 else
-    input=getSelectedFields(input);
-    input.eveluate(3).fieldname=input.selectedfields{end};
+    fieldname.temperature=getSelectedFields(measureData, 'select temperature');
 end
-input.eveluate(3).name='temperature';
-input.eveluate(3).variable='T';
+temperature.name='temperature';
+temperature.variable='T';
+for ii=1:length(measureData)
+    temperature(ii).value=measureData(ii).(fieldname.temperature{1}).value;
+end
+% time vactor
+if isfield(measureData, 'measurement_TIME_VECTOR')
+    fieldname.time={'measurement_TIME_VECTOR'};
+else
+    fieldname.time=getSelectedFields(measureData, 'select time');
+end
+time.name='time';
+time.variable='t';
+for ii=1:length(measureData)
+    time(ii).value=measureData(ii).(fieldname.time{1}).value;
+end
 
 
 %% Evaluate measurement data
