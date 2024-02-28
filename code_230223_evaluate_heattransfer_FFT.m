@@ -9,6 +9,7 @@
 %% clear
 clc
 clearvars -except fig_NuPe
+unc = @LinProp 
 if exist('fig_NuPe')
     if isempty(fig_NuPe.findobj)
         clear fig_NuPe
@@ -26,13 +27,14 @@ measureData = getMeasureData();
 % reading parameter and adapting gas parameters to load pressure
 %  getTestrigParameter
 
-%  getUncertaintyParameter
-param.gamma.pressure=mean(measureData(1).druck_gas);
-[param.gamma.value,~,param.cp.value]=getIsentropicExp(param.gamma.pressure*100000);
+
 %% Adapt measurement data
+%  getUncertaintyParameter
+% param.gamma.pressure=mean(measureData(1).druck_gas);
+% [param.gamma.value,~,param.cp.value]=getIsentropicExp(param.gamma.pressure*100000);
 
 % Add volume in m³
-[measureData,param,input]=addVolume(measureData,param,input);
+% [measureData,param,input]=addVolume(measureData,param,input);
 
 %% Select data for analyzation
 
@@ -72,7 +74,18 @@ temperature.variable='T';
 for ii=1:length(measureData)
     temperature(ii).value=measureData(ii).(fieldname.temperature{1}).value;
 end
-% time vactor
+% ambient temperature Data
+if isfield(measureData, 'temperature_ambient')
+    fieldname.temperature_ambient={'temperature_ambient'};
+else
+    fieldname.temperature_ambient=getSelectedFields(measureData, 'select ambient temperature ');
+end
+temperature_ambient.name='temperature_ambient';
+temperature_ambient.variable='T_a';
+for ii=1:length(measureData)
+    temperature_ambient(ii).value=measureData(ii).(fieldname.temperature_ambient{1}).value;
+end
+% time vector
 if isfield(measureData, 'measurement_TIME_VECTOR')
     fieldname.time={'measurement_TIME_VECTOR'};
 else
@@ -84,54 +97,71 @@ for ii=1:length(measureData)
     time(ii).value=measureData(ii).(fieldname.time{1}).value;
 end
 
+sampletime = measureData(1).model_PARAMETERS.all_parameters_array(1).value;
 
 %% Evaluate measurement data
 % DFT of pressure and Volume
-for ii=1:input.nFiles
-    for jj=1:length(input.eveluate)
-        [EvalData(ii).(input.eveluate(jj).name).value,...
-            EvalData(ii).(input.eveluate(jj).name).frequency,...
-            EvalData(ii).(input.eveluate(jj).name).dftcoeff_omega,EvalData(ii).omega] =...
-            getSpectrumOmega(measureData(ii).zeit,...
-            measureData(ii).(input.eveluate(jj).fieldname),...
-            measureData(ii).config.anregung_freq);
-    end
+for ii=1:length(measureData)
+        excitationFrequency = measureData(ii).model_PARAMETERS.important_parameters_struct.excitation.frequency.value;
+        % volume
+        volume(ii).FFT = propagateSysUncToFreqDomain...
+            (volume(ii).value, time(ii).value, sampletime,...
+            'excitation_frequency',excitationFrequency);
+        for jj=1:volume(ii).FFT.N_data_points_in_FFT
+        temp1(jj)=unc(real(volume(ii).FFT.value(jj)),real(volume(ii).FFT.uncertainty.complex(jj)));
+        temp2(jj)=unc(imag(volume(ii).FFT.value(jj)),imag(volume(ii).FFT.uncertainty.complex(jj)));
+        end
+        volume(ii).FFT.metas=temp1+1i*temp2;
+        % pressure
+        pressure(ii).FFT = propagateSysUncToFreqDomain...
+            (pressure(ii).value, time(ii).value, sampletime,...
+            'excitation_frequency',excitationFrequency);
+        temp1=unc(real(pressure(ii).FFT.value),diag(real(pressure(ii).FFT.uncertainty.complex)));
+        temp2=unc(imag(pressure(ii).FFT.value),diag(imag(pressure(ii).FFT.uncertainty.complex)));
+        pressure(ii).FFT.metas=temp1+1i*temp2;
+        % temperature
+        temperature(ii).FFT = propagateSysUncToFreqDomain...
+            (temperature(ii).value, time(ii).value, sampletime,...
+            'excitation_frequency',excitationFrequency);
 end
-clear ii jj
-
+clear ii excitationFrequency temp1 temp2
 
 
 % set Volume signal to zero phase dirfference and turn al other pointers
 % equivalent
-for ii=1:input.nFiles
+for ii=1:length(measureData)
     %     EvalData(ii).volume=shiftComplex(EvalData(ii).volume,EvalData(ii).frequency,-0.00);
-    phase0=angle(EvalData(ii).volume.dftcoeff_omega);
-    EvalData(ii).volume.value(2:end)=turnComplex(EvalData(ii).volume.value(2:end),-phase0);
+    phase0=angle(volume(ii).FFT.value(find(volume(ii).FFT.frequencies==volume(ii).FFT.excitation_frequency)));
+    volume(ii).FFT.value(2:end)=turnComplex(volume(ii).FFT.value(2:end),-phase0);
     %     EvalData(ii).volume.value(1)=abs(EvalData(ii).volume.value(1));
     %     phase0=angle(EvalData(ii).volume);
-    EvalData(ii).pressure.value(2:end)=turnComplex(EvalData(ii).pressure.value(2:end),-phase0);
+    pressure(ii).FFT.value(2:end)=turnComplex(pressure(ii).FFT.value(2:end),-phase0);
     %     EvalData(ii).pressure.value(1)=abs(EvalData(ii).pressure.value(1));
     %     EvalData(ii).pressure_=shiftComplex(EvalData(ii).pressure,EvalData(ii).frequency,0.01);
-    EvalData(ii).temperature.value(2:end)=turnComplex(EvalData(ii).temperature.value(2:end),-phase0);
+    temperature(ii).FFT.value(2:end)=turnComplex(temperature(ii).FFT.value(2:end),-phase0);
     %     EvalData(ii).temperature.value(1)=abs(EvalData(ii).temperature.value(1));
     clear phase 0
 end
 clear ii
 
 % Evaluation Method
-for ii=1:input.nFiles
+for ii=1:length(measureData)
     % Determination of temperature from pressure and Volume Data
-    [EvalData(ii).temperature_pv,EvalData(ii).mass.value,EvalData(ii).ambiantTemperatrue.value] = getTempFFT...
-        (EvalData(ii).volume, EvalData(ii).pressure, measureData(ii), param);
+%     [temperature_pv(ii),mass(ii).value] = getTempFFT...
+%         (volume(ii).FFT, pressure(ii).FFT,temperature_ambient(ii), PreloadPressure, Testrig, Gas);
     % Determination of Heatflow from pressure and Volume Data
-    [EvalData(ii).heatflow] = getHeatFFT...
-        (EvalData(ii).volume, EvalData(ii).pressure, param);
+%     [heatflow(ii)] = getHeatFFT...
+%         (volume(ii).FFT, pressure(ii).FFT, param);
     % Determination of Nuselt Number from Heatflow and Temperature Data
-    [EvalData(ii).Nu] = getNusseltFFT...
-        (EvalData(ii).heatflow, EvalData(ii).temperature,...
-        EvalData(ii).ambiantTemperatrue.value,param);
-
-    EvalData(ii).stiffness = EvalData(ii).pressure.dftcoeff_omega/EvalData(ii).volume.dftcoeff_omega;
+%     [Nu(ii)] = getNusseltFFT...
+%         (heatflow(ii), temperature(ii).FFT,...
+%         temperature_ambient(ii),param);
+pressures(ii)=pressure(ii).FFT.value(2);
+volumes(ii)=volume(ii).FFT.value(2);
+%     stiffness(ii) = pressure(ii).FFT.value(find(pressure(ii).FFT.frequencies==pressure(ii).FFT.excitation_frequency))/...
+%         volume(ii).FFT.value(find(volume(ii).FFT.frequencies==volume(ii).FFT.excitation_frequency));
+    stiffness(ii) = pressure(ii).FFT.value(2)/...
+        volume(ii).FFT.value(2);
 end
 clear ii jj
 
@@ -207,6 +237,12 @@ Nu120bar4mm = resultsFitKornhauser;
 
 [fig_Stffness] = plotFreqResp([EvalData.omega],[EvalData.stiffness]/1000,input);
 
+
+
+% figure(1)
+% errorbar(volume(1).DFT.FFT.frequencies,abs(volume(1).DFT.FFT.value),volume(1).DFT.FFT.uncertainty.absolute,'.')
+% figure(2)
+% errorbar(volume(1).DFT.FFT.frequencies,angle(volume(1).DFT.FFT.value),volume(1).DFT.FFT.uncertainty.phase,'.')
 
 %% Temperaturauswertung
 % for ii=1:input.nFiles
