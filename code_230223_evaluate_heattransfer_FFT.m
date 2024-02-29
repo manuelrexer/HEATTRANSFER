@@ -25,7 +25,7 @@ measureData = getMeasureData();
 
                 
 % reading parameter and adapting gas parameters to load pressure
-%  getTestrigParameter
+testrig=getTestrigParameter(measureData);
 
 
 %% Adapt measurement data
