@@ -43,12 +43,7 @@ if isfield(measureData, 'Volume')
 else
     fieldname.volume=getSelectedFields(measureData,'Select volume field');
 end
-volume.name='volume';
-volume.variable='V';
-for ii=1:length(measureData)
-    volume(ii).value=measureData(ii).(fieldname.volume{1}).value;
-    volume(ii).p_ID_Sensor=measureData(ii).(fieldname.volume{1}).sensor_data.p_ID.URI;
-end
+volume=extractMeasurements(measureData,fieldname.volume);
 
 % pressure Data
 if isfield(measureData, 'pressure_gas')
@@ -56,13 +51,7 @@ if isfield(measureData, 'pressure_gas')
 else
     fieldname.pressure=getSelectedFields(measureData, 'select pressure:');
 end
-
-pressure.name='pressure';
-pressure.variable='p';
-for ii=1:length(measureData)
-    pressure(ii).value=measureData(ii).(fieldname.pressure{1}).value;
-    pressure(ii).p_ID_Sensor=measureData(ii).(fieldname.pressure{1}).sensor_data.p_ID.URI;
-end
+pressure=extractMeasurements(measureData,fieldname.pressure{1});
 
 % temperature Data
 if isfield(measureData, 'temperature_gas')
@@ -70,34 +59,27 @@ if isfield(measureData, 'temperature_gas')
 else
     fieldname.temperature=getSelectedFields(measureData, 'select temperature');
 end
-temperature.name='temperature';
-temperature.variable='T';
-for ii=1:length(measureData)
-    temperature(ii).value=measureData(ii).(fieldname.temperature{1}).value;
-    temperature(ii).p_ID_Sensor=measureData(ii).(fieldname.temperature{1}).sensor_data.p_ID.URI;
-end
+temperature=extractMeasurements(measureData,fieldname.temperature);
+
 % ambient temperature Data
 if isfield(measureData, 'temperature_ambient')
     fieldname.temperature_ambient={'temperature_ambient'};
 else
     fieldname.temperature_ambient=getSelectedFields(measureData, 'select ambient temperature ');
 end
-temperature_ambient.name='temperature_ambient';
-temperature_ambient.variable='T_a';
-for ii=1:length(measureData)
-    temperature_ambient(ii).value=measureData(ii).(fieldname.temperature_ambient{1}).value;
-    temperature_ambient(ii).p_ID_Sensor=measureData(ii).(fieldname.temperature_ambient{1}).sensor_data.p_ID.URI;
-end
+temperature_ambient=extractMeasurements(measureData,fieldname.temperature_ambient);
+
 % time vector
 if isfield(measureData, 'measurement_TIME_VECTOR')
     fieldname.time={'measurement_TIME_VECTOR'};
 else
     fieldname.time=getSelectedFields(measureData, 'select time');
 end
-time.name='time';
-time.variable='t';
+
 for ii=1:length(measureData)
     time(ii).value=measureData(ii).(fieldname.time{1}).value;
+    time(ii).name='time';
+    time(ii).variable='t';
 end
 
 sampletime = measureData(1).model_PARAMETERS.all_parameters_array(1).value;
