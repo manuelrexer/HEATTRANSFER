@@ -1,4 +1,4 @@
-function [Heatflow] = getHeatFFT(volume,pressure,testSetup)
+function [Heatflow] = getHeatFFT(volume,pressure,temperature_ambient,testSetup)
 %getHeatFFT() Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -11,8 +11,16 @@ function [Heatflow] = getHeatFFT(volume,pressure,testSetup)
 
 % Calculation of Heat Flow in Frequecy domain
 for ii=length(volume):-1:1
-[Heatflow.value,Heatflow.frequency] = convfft(param.gamma.value*Pressure.value*100000,Volume.value,Pressure.frequency,Volume.frequency);
-Heatflow.value = (1+param.gamma.value)/(param.gamma.value-1)*1i*2*pi*Heatflow.value.*Heatflow.frequency;
+    gamma=getFluidProperty(testSetup(ii).fluid_ID,...
+        mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'isentropic_exponent');
+    [Heatflow(ii).FFT.value,Heatflow(ii).FFT.frequencies] = convfft(...
+        gamma*...
+        pressure(ii).FFT.value*100000,...
+        volume(ii).FFT.value,...
+        pressure(ii).FFT.frequencies,...
+        volume(ii).FFT.frequencies);
+    Heatflow(ii).FFT.value = (1+gamma)/(gamma-1)...
+        *1i*2*pi*Heatflow(ii).FFT.value.*Heatflow(ii).FFT.frequencies';
 end
 
 end
