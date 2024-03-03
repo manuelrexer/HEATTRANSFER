@@ -25,25 +25,25 @@ measureData = getMeasureData();
 
                 
 % reading parameter and adapting gas parameters to load pressure
-testrig=getTestrigParameter(measureData);
+testSetup=getTestrigParameter(measureData);
 
-%% Adapt measurement data
-%  getUncertaintyParameter
+
+
 % param.gamma.pressure=mean(measureData(1).druck_gas);
 % [param.gamma.value,~,param.cp.value]=getIsentropicExp(param.gamma.pressure*100000);
-
-% Add volume in m³
-% [measureData,param,input]=addVolume(measureData,param,input);
 
 %% Select data for analyzation
 
 % Volume Data
-if isfield(measureData, 'Volume')
-    fieldname.volume='Volume';
+if isfield(measureData, 'current_deflection')
+    fieldname.deflection={'current_deflection'};
 else
-    fieldname.volume=getSelectedFields(measureData,'Select volume field');
+    fieldname.deflection=getSelectedFields(measureData,'Select defelction field');
 end
-volume=extractMeasurements(measureData,fieldname.volume);
+
+deflection=extractMeasurements(measureData,fieldname.deflection{1});
+
+
 
 % pressure Data
 if isfield(measureData, 'pressure_gas')
@@ -59,7 +59,7 @@ if isfield(measureData, 'temperature_gas')
 else
     fieldname.temperature=getSelectedFields(measureData, 'select temperature');
 end
-temperature=extractMeasurements(measureData,fieldname.temperature);
+temperature=extractMeasurements(measureData,fieldname.temperature{1});
 
 % ambient temperature Data
 if isfield(measureData, 'temperature_ambient')
@@ -67,7 +67,7 @@ if isfield(measureData, 'temperature_ambient')
 else
     fieldname.temperature_ambient=getSelectedFields(measureData, 'select ambient temperature ');
 end
-temperature_ambient=extractMeasurements(measureData,fieldname.temperature_ambient);
+temperature_ambient=extractMeasurements(measureData,fieldname.temperature_ambient{1});
 
 % time vector
 if isfield(measureData, 'measurement_TIME_VECTOR')
@@ -75,7 +75,6 @@ if isfield(measureData, 'measurement_TIME_VECTOR')
 else
     fieldname.time=getSelectedFields(measureData, 'select time');
 end
-
 for ii=1:length(measureData)
     time(ii).value=measureData(ii).(fieldname.time{1}).value;
     time(ii).name='time';
@@ -83,6 +82,8 @@ for ii=1:length(measureData)
 end
 
 sampletime = measureData(1).model_PARAMETERS.all_parameters_array(1).value;
+% Add volume in m³
+[volume,testSetup]=addVolumeData(deflection,pressure,testSetup);
 
 %% Evaluate measurement data
 % DFT of pressure and Volume
@@ -92,18 +93,18 @@ for ii=1:length(measureData)
         volume(ii).FFT = propagateSysUncToFreqDomain...
             (volume(ii).value, time(ii).value, sampletime,...
             'excitation_frequency',excitationFrequency);
-        for jj=1:volume(ii).FFT.N_data_points_in_FFT
-        temp1(jj)=unc(real(volume(ii).FFT.value(jj)),real(volume(ii).FFT.uncertainty.complex(jj)));
-        temp2(jj)=unc(imag(volume(ii).FFT.value(jj)),imag(volume(ii).FFT.uncertainty.complex(jj)));
-        end
-        volume(ii).FFT.metas=temp1+1i*temp2;
+%         for jj=1:volume(ii).FFT.N_data_points_in_FFT
+%             temp1(jj)=unc(real(volume(ii).FFT.value(jj)),real(volume(ii).FFT.uncertainty.complex(jj)));
+%             temp2(jj)=unc(imag(volume(ii).FFT.value(jj)),imag(volume(ii).FFT.uncertainty.complex(jj)));
+%         end
+%         volume(ii).FFT.metas=temp1+1i*temp2;
         % pressure
         pressure(ii).FFT = propagateSysUncToFreqDomain...
             (pressure(ii).value, time(ii).value, sampletime,...
             'excitation_frequency',excitationFrequency);
-        temp1=unc(real(pressure(ii).FFT.value),diag(real(pressure(ii).FFT.uncertainty.complex)));
-        temp2=unc(imag(pressure(ii).FFT.value),diag(imag(pressure(ii).FFT.uncertainty.complex)));
-        pressure(ii).FFT.metas=temp1+1i*temp2;
+%         temp1=unc(real(pressure(ii).FFT.value),diag(real(pressure(ii).FFT.uncertainty.complex)));
+%         temp2=unc(imag(pressure(ii).FFT.value),diag(imag(pressure(ii).FFT.uncertainty.complex)));
+%         pressure(ii).FFT.metas=temp1+1i*temp2;
         % temperature
         temperature(ii).FFT = propagateSysUncToFreqDomain...
             (temperature(ii).value, time(ii).value, sampletime,...
@@ -116,7 +117,8 @@ clear ii excitationFrequency temp1 temp2
 % equivalent
 for ii=1:length(measureData)
     %     EvalData(ii).volume=shiftComplex(EvalData(ii).volume,EvalData(ii).frequency,-0.00);
-    phase0=angle(volume(ii).FFT.value(find(volume(ii).FFT.frequencies==volume(ii).FFT.excitation_frequency)));
+    [~,closestind]=min(abs(volume(ii).FFT.frequencies-volume(ii).FFT.excitation_frequency));
+    phase0=angle(volume(ii).FFT.value(closestind));
     volume(ii).FFT.value(2:end)=turnComplex(volume(ii).FFT.value(2:end),-phase0);
     %     EvalData(ii).volume.value(1)=abs(EvalData(ii).volume.value(1));
     %     phase0=angle(EvalData(ii).volume);
@@ -125,15 +127,15 @@ for ii=1:length(measureData)
     %     EvalData(ii).pressure_=shiftComplex(EvalData(ii).pressure,EvalData(ii).frequency,0.01);
     temperature(ii).FFT.value(2:end)=turnComplex(temperature(ii).FFT.value(2:end),-phase0);
     %     EvalData(ii).temperature.value(1)=abs(EvalData(ii).temperature.value(1));
-    clear phase 0
+    clear phase0 closestind
 end
 clear ii
 
 % Evaluation Method
 for ii=1:length(measureData)
     % Determination of temperature from pressure and Volume Data
-%     [temperature_pv(ii),mass(ii).value] = getTempFFT...
-%         (volume(ii).FFT, pressure(ii).FFT,temperature_ambient(ii), PreloadPressure, Testrig, Gas);
+    [temperature_pv(ii),mass(ii).value] = getTempFFT...
+        (volume(ii).FFT, pressure(ii).FFT,temperature_ambient(ii), PreloadPressure, Testrig, Gas);
     % Determination of Heatflow from pressure and Volume Data
 %     [heatflow(ii)] = getHeatFFT...
 %         (volume(ii).FFT, pressure(ii).FFT, param);

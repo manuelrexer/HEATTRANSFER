@@ -18,8 +18,8 @@ for ii=length(measureData):-1:1
 
 
     % extract uncertainty values
-    data.unc.bias = getUncValues(data,sensor,'BiasUncertainty');
-    data.unc.sensititvity =getUncValues(data,sensor,'SensitivityUncertainty');
+    data.unc.bias = getUncValues(data,sensor,'Bias.hasProperty.BiasUncertainty');
+    data.unc.sensititvity =getUncValues(data,sensor,'Sensitivity.hasProperty.SensitivityUncertainty');
     data.unc.linearity = getUncValues(data,sensor,'LinearityUncertainty');
     data.unc.hysteresis = getUncValues(data,sensor,'HysteresisUncertainty');
 
@@ -32,14 +32,19 @@ end
 end
 function res = getUncValues(data,sensor,uncfield)
 try
-    if contains(sensor.hasSystemCapability.SensorCapability.hasProperty.(uncfield).keywords,'absolute')
-        res = sensor.hasSystemCapability.SensorCapability.hasProperty.(uncfield).value.literal;
+    if contains(getValueInsideNestedStructWithPath(sensor,...
+            ['hasSystemCapability.SensorCapability.hasProperty.',uncfield,'.keywords.literal']),'absolute')
+
+        res = getValueInsideNestedStructWithPath(sensor,...
+            ['hasSystemCapability.SensorCapability.hasProperty.',uncfield,'.value.literal']);
         % check if units are the same
-        if all(contains(fieldnames(sensor.hasSystemCapability.SensorCapability.hasProperty.(uncfield).unit),data.unit))
+        if all(contains(fieldnames(getValueInsideNestedStructWithPath(sensor,...
+                ['hasSystemCapability.SensorCapability.hasProperty.',uncfield,'.unit'])),data.unit))
             disp('Attention: Units of uncertatnity Value and Measured Values are not machting!!!')
         end
     else
         % tbd
+        disp('relative uncertainty is currently not supported.')
         res= [];
     end
 catch

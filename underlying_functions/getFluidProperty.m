@@ -1,4 +1,4 @@
-function vlaue = getFluidProperty(p_ID,p,T,property)
+function value = getFluidProperty(p_ID,p,T,property)
 % Lookuptable for substances
 % p=6.7*100000;
 % T=30+273;
@@ -15,6 +15,10 @@ T_vec=h5read([h5filepath.folder,'\',h5filepath.name],'/substance/index_vectors/t
 % get matrix
 Mat=h5read([h5filepath.folder,'\',h5filepath.name],['/substance/n_dimensional_lookup_tables/',property]);
 
-value = interp2(T_vec,p_vec,Mat,T,p);
+%%% Achtung hier ist noch ein Fehler drin!!!!! der Faktor 10 ist nicht
+%%% richtig!!
+value = interp2(T_vec,p_vec*10,Mat,T,p);
+% [X,Y]=meshgrid(T_vec,p_vec*10)
+% surf(X,Y,Mat)
 
 end
