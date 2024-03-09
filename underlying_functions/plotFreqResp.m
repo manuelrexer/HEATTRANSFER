@@ -1,47 +1,37 @@
-function [fig] = plotFreqResp(vFreqs,vH,input,fig)
+function [fig] = plotFreqResp(vFreqs,vH,fig,varargin)
 
-% Benennung
-if nargin>3 && isfield(input, 'inputname') && isfield(input, 'outputname')
-    name=['Übertragungsfunktion: ', input.inputname,' nach ' , input.outputname];
-else
-    name=[];
-end
+%% Input adaption
+p = inputParser;
+% addOptional(p, 'figure', figure());
+addOptional(p, 'plottype', 'loglog');
+addOptional(p,'decades_equal', false);
+addOptional(p, 'phase', false );
+addOptional(p, 'xlabel', 'FREQUENZ in Hz');
+addOptional(p, 'ylabel', '|H|');
+addOptional(p, 'flimits', []);
+addOptional(p, 'ylimits', []);
+parse(p, varargin{:})
 
-% Plotart auswählen
-if nargin>3 && isfield(input, 'type')
-    type = input.type;
-else
-    type = 'loglog';
-end
+type = p.Results.plottype;
+% fig=p.Results.figure;
+% pubflishfig
+% name=['Übertragungsfunktion: ', input.inputname,' nach ' , input.outputname]
+xlimits=p.Results.flimits;
+ylimits=p.Results.ylimits;
+fLabel=p.Results.xlabel;
+yLabel=p.Results.ylabel;
+decades_equ = p.Results.decades_equal;
+plotphase=p.Results.phase;
 
-% loglog gleich skallieren
-if nargin>3 && isfield(input, 'decades_equal')
-    decades_equ = input.decades_equal;
-else
-    decades_equ = false;
-end
-
-if nargin>3 && isfield(input, 'flimits')
-    xlimits=input.flimits;
-end
-if nargin>3 && isfield(input, 'ylimits')
-    ylimits=input.ylimits;
-end
-
-if nargin <4
-    fig=figure('name', ['Frequenzgang: ', type],'NumberTitle','off');
-    publishfig
-end
 %% Frequenzgang plotten
-
-
 
 switch type
 
     case 'db'
         figure(fig)
-
-%         subplot(2, 1, 1);
+        if plotphase
+            subplot(2, 1, 1);
+        end
         semilogx(vFreqs, db(abs(vH)), 's-');
         hold on
         box off
@@ -53,7 +43,9 @@ switch type
     case 'loglog'
         figure(fig)
 
-%         subplot(2, 1, 1);
+        if plotphase
+            subplot(2, 1, 1);
+        end
 
         loglog(vFreqs, abs(vH), 's-');
         hold on
@@ -61,58 +53,57 @@ switch type
         if decades_equ
             decades_equal(gca)
         end
-        ylabel('|H|');
-
-        title(name);
+        ylabel(yLabel)
+        xlabel(fLabel)
+        %         title(name);
         publishfig
-        
+
     case 'absolute'
 
         figure(fig)
         box off
-%         subplot(2, 1, 1);
+        if plotphase
+            subplot(2, 1, 1);
+        end
         semilogx(vFreqs, (abs(vH)), 's-');
-        
-        hold on
-        
-        
-        
-        xlabel(input.xlabel);
-        ylabel(input.ylabel);
 
-        title(name);
+        hold on
+
+        ylabel(yLabel)
+        xlabel(fLabel)
+        %         title(name);
         box off
         publishfig
-        
+
 
 end
 
-if exist("xlimits") && exist("ylimits")
+if ~isempty(xlimits) && ~isempty(ylimits)
     if decades_equ
         decades_equal(gca,xlimits,ylimits)
     else
         xlim(xlimits)
         ylim(ylimits)
     end
-elseif exist("xlimits")
+elseif ~isempty(xlimits)
     xlim(xlimits)
-elseif exist("ylimits")
+elseif ~isempty(ylimits)
     ylim(ylimits)
 end
+if plotphase
+    deg=rad2deg(angle(vH));
 
-% deg=rad2deg(angle(vH));
-% 
-% if deg<0
-%     deg=deg+360;
-% end
-% subplot(2, 1, 2);
-% semilogx(vFreqs, deg, 's-');
-% hold on
-% box off
-% ylabel('PHASENWINKEL in °');
-% xlabel('FREQUENZ f in Hz');
-% if exist("xlimits")
-%     xlim(xlimits)
-% end
-
+    if deg<0
+        deg=deg+360;
+    end
+    subplot(2, 1, 2);
+    semilogx(vFreqs, deg, 's-');
+    hold on
+    box off
+    ylabel('PHASENWINKEL in °');
+    xlabel('FREQUENZ f in Hz');
+    if ~isempty(xlimits)
+        xlim(xlimits)
+    end
+end
 end

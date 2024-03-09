@@ -11,7 +11,7 @@ for ii=length(measureData):-1:1
     acc_setup=false;
     for jj=length(hardwaresetup):-1:1
         objtypes{jj}=measureData(ii).METADATA.hardware.(hardwaresetup{jj}).type;
-        if objtypes{jj}=="TestObject"||objtypes{jj}=="testObject" ||objtypes{jj}=="Testobject"||objtypes{jj}=="testobject"
+        if strcmpi(objtypes{jj},"TestObject")
             testobject_ID{end+1}=measureData(ii).METADATA.hardware.(hardwaresetup{jj}).p_ID;
             fluid_ID{end+1}=measureData(ii).METADATA.hardware.(hardwaresetup{jj}).fluid.p_ID;
         end
@@ -41,30 +41,31 @@ for ii=length(measureData):-1:1
         importantParameter.V0 = simplyfyPropertyStruct(testobject.hasProperty.V0);
         if strcmp(importantParameter.V0.unit,'L')
             importantParameter.V0.value=importantParameter.V0.value/1000;
-            importantParameter.V0.Accuracy=importantParameter.V0.Accuracy/1000;
+            importantParameter.V0.accuracy=importantParameter.V0.accuracy/1000;
             importantParameter.V0.unit='M3';
         end
         importantParameter.Aw.value = 4*pi*(3/4/pi*importantParameter.V0.value)^(2/3);
-        importantParameter.Aw.Accuracy =abs(2/3*(3/4/pi)^(2/3)*(importantParameter.V0.value)^(-1/3)* importantParameter.V0.Accuracy);
+        importantParameter.Aw.accuracy =abs(2/3*(3/4/pi)^(2/3)*(importantParameter.V0.value)^(-1/3)* importantParameter.V0.accuracy);
         importantParameter.Aw.unit='M2';
         importantParameter.Aw.symbol='A_w';
         importantParameter.Ad = simplyfyPropertyStruct(testrig.hasProperty.A_d);
         importantParameter.p0.value = measureData(ii).model_PARAMETERS.important_parameters_struct.cylinder.preload_pressure.value;
         importantParameter.p0.unit = 'BAR';
-        importantParameter.p0.Accuracy = 0.05;
+        importantParameter.p0.accuracy = 0.05;
     else
         %all other testrigs
         importantParameter.V0 = simplyfyPropertyStruct(testobject.hasProperty.V0);
         if strcmp(importantParameter.V0.unit,'L')
             importantParameter.V0.value=importantParameter.V0.value/1000;
-            importantParameter.V0.Accuracy=importantParameter.V0.Accuracy/1000;
+            importantParameter.V0.accuracy=importantParameter.V0.Accuracy/1000;
             importantParameter.V0.unit='M3';
         end
-        if isfield(testobject.hasProperty.V1)
-            importantParameter.V1 = simplyfyPropertyStruct(testobject.hasProperty.V1)
+        if isfield(testobject.hasProperty,'V1')
+            importantParameter.V1 = simplyfyPropertyStruct(testobject.hasProperty.V1);
         end
         importantParameter.Ad = simplyfyPropertyStruct(testobject.hasProperty.A_d);
         importantParameter.Aw = simplyfyPropertyStruct(testobject.hasProperty.A_w);
+        
     end
 
 
@@ -78,4 +79,25 @@ for ii=length(measureData):-1:1
     clear importantParameter f
 end
 
+end
+
+function [simple] = simplyfyPropertyStruct(input)
+%implyfyPropertyStruct extracts important information from RDF Data
+%structure
+%   Author Manuel Rexer 01.03.2024
+simple.value = input.value.literal;
+unit=fieldnames(input.unit);
+for ii=1:length(unit)
+    if strcmp(unit{ii}, 'prefix')
+        unit{ii}=[];
+    end
+end
+unit=unit(~cellfun('isempty',unit));
+if length(unit)==1
+    simple.unit = unit{1};
+else
+    simple.unit = unit;
+end
+simple.accuracy = input.Accuracy.literal;
+simple.symbol = input.symbol.literal;
 end

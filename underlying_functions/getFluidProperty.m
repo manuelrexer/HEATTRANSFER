@@ -7,8 +7,8 @@ function value = getFluidProperty(p_ID,p,T,property)
 prt=split(p_ID,'/');
 UUID=prt{6};
 
-filenames=dir(['.\substances\',UUID]);
-h5filepath=filenames(3);
+fileNames=dir(['.\substances\',UUID]);
+h5filepath=fileNames(3);
 
 p_vec=h5read([h5filepath.folder,'\',h5filepath.name],'/substance/index_vectors/pressures');
 T_vec=h5read([h5filepath.folder,'\',h5filepath.name],'/substance/index_vectors/temperatures');
@@ -17,7 +17,7 @@ Mat=h5read([h5filepath.folder,'\',h5filepath.name],['/substance/n_dimensional_lo
 
 %%% Achtung hier ist noch ein Fehler drin!!!!! der Faktor 10 ist nicht
 %%% richtig!!
-value = interp2(T_vec,p_vec*10,Mat,T,p);
+value = interp2(T_vec,p_vec,Mat,T,p);
 % [X,Y]=meshgrid(T_vec,p_vec*10)
 % surf(X,Y,Mat)
 

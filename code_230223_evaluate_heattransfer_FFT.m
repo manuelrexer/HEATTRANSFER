@@ -1,3 +1,4 @@
+
 % code_230223_evaluate_heattransfer_FFT
 % Code that determines the complex Nusselt number in the frequency domain
 % from measurement data and  plot it afterwards
@@ -8,17 +9,13 @@
 
 %% clear
 clc
-clearvars -except fig_NuPe
-unc = @LinProp
-if exist('fig_NuPe')
-    if isempty(fig_NuPe.findobj)
-        clear fig_NuPe
-    end
-end
+clearvars -except fig_Nu fig_NuPe fig_stiffness
+unc = @LinProp;
+
 %% Options and Preperation
 
 % number of orders to bee evaluated (first order is neccesary)
-neval=4;
+neval=1;
 
 %% Reading the measurement data
 measureData = getMeasureData();
@@ -61,7 +58,7 @@ if isfield(measureData, 'measurement_TIME_VECTOR')
 else
     fieldname.time=getSelectedFields(measureData, 'select time');
 end
-for ii=1:length(measureData)
+for ii=length(measureData):-1:1
     time(ii).value=measureData(ii).(fieldname.time{1}).value;
     time(ii).name='time';
     time(ii).variable='t';
@@ -73,83 +70,83 @@ sampletime = measureData(1).model_PARAMETERS.all_parameters_array(1).value;
 
 %% Evaluate measurement data
 % DFT of pressure and Volume
-for ii=1:length(measureData)
+for ii=length(measureData):-1:1
     excitationFrequency(ii) = measureData(ii).model_PARAMETERS.important_parameters_struct.excitation.frequency.value;
     % volume
     volume(ii).FFT = propagateSysUncToFreqDomain...
         (volume(ii).value, time(ii).value, sampletime,...
         'excitation_frequency',excitationFrequency(ii));
-    %         for jj=1:volume(ii).FFT.N_data_points_in_FFT
-    %             temp1(jj)=unc(real(volume(ii).FFT.value(jj)),real(volume(ii).FFT.uncertainty.complex(jj)));
-    %             temp2(jj)=unc(imag(volume(ii).FFT.value(jj)),imag(volume(ii).FFT.uncertainty.complex(jj)));
-    %         end
-    %         volume(ii).FFT.metas=temp1+1i*temp2;
     % pressure
     pressure(ii).FFT = propagateSysUncToFreqDomain...
         (pressure(ii).value, time(ii).value, sampletime,...
         'excitation_frequency',excitationFrequency(ii));
-    %         temp1=unc(real(pressure(ii).FFT.value),diag(real(pressure(ii).FFT.uncertainty.complex)));
-    %         temp2=unc(imag(pressure(ii).FFT.value),diag(imag(pressure(ii).FFT.uncertainty.complex)));
-    %         pressure(ii).FFT.metas=temp1+1i*temp2;
     % temperature
     temperature(ii).FFT = propagateSysUncToFreqDomain...
-        (temperature(ii).value, time(ii).value, sampletime,...
+        ((temperature(ii).value+273.15), time(ii).value, sampletime,...
         'excitation_frequency',excitationFrequency(ii));
+    % ambient temperature
     temperature_ambient(ii).FFT = propagateSysUncToFreqDomain...
-        (temperature_ambient(ii).value, time(ii).value, sampletime,...
-        'excitation_frequency',excitationFrequency(ii))
+        ((temperature_ambient(ii).value+273.15), time(ii).value, sampletime,...
+        'excitation_frequency',excitationFrequency(ii));
 end
-clear temp1 temp2
+
 
 
 % set Volume signal to zero phase dirfference and turn al other pointers
 % equivalent
-for ii=1:length(measureData)
-    %     EvalData(ii).volume=shiftComplex(EvalData(ii).volume,EvalData(ii).frequency,-0.00);
+for ii=length(measureData):-1:1
     [~,closestind(ii)]=min(abs(volume(ii).FFT.frequencies-volume(ii).FFT.excitation_frequency));
+
     phase0=angle(volume(ii).FFT.value(closestind(ii)));
     volume(ii).FFT.value(2:end)=turnComplex(volume(ii).FFT.value(2:end),-phase0);
-    %     EvalData(ii).volume.value(1)=abs(EvalData(ii).volume.value(1));
-    %     phase0=angle(EvalData(ii).volume);
     pressure(ii).FFT.value(2:end)=turnComplex(pressure(ii).FFT.value(2:end),-phase0);
-    %     EvalData(ii).pressure.value(1)=abs(EvalData(ii).pressure.value(1));
-    %     EvalData(ii).pressure_=shiftComplex(EvalData(ii).pressure,EvalData(ii).frequency,0.01);
     temperature(ii).FFT.value(2:end)=turnComplex(temperature(ii).FFT.value(2:end),-phase0);
-    %     EvalData(ii).temperature.value(1)=abs(EvalData(ii).temperature.value(1));
+    temperature_ambient(ii).FFT.value(2:end)=turnComplex(temperature_ambient(ii).FFT.value(2:end),-phase0);
+
     clear phase0
 end
 clear ii
 
 % Evaluation Method
+for ii=length(testSetup):-1:1
+testSetup(ii).fluid_ID='https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a'
+end
+
 
 % Determination of temperature from pressure and Volume Data
 [temperature_pv,mass] = getTempFFT(volume,pressure ,temperature_ambient , testSetup);
 % Determination of Heatflow from pressure and Volume Data
-heatflow = getHeatFFT(volume,pressure,temperature_ambient,testSetup)
+heatflow = getHeatFFT(volume,pressure,temperature_ambient,testSetup);
 % Determination of Nuselt Number from Heatflow and Temperature Data
-Nu = getNusseltFFT(heatflow,temperature,temperature_ambient,pressure,testSetup);
 
+for ii=1:length(temperature_pv)
+    temperature_pv(ii).FFT.value(1)=temperature(ii).FFT.value(1);
+end
+
+
+Nu = getNusseltFFT(heatflow,temperature,temperature_ambient,pressure,testSetup);
+Nu_pv = getNusseltFFT(heatflow,temperature_pv,temperature_ambient,pressure,testSetup);
 
 % Analysing stiffness
-for ii=1:length(measureData)
-%     pressures(ii)=pressure(ii).FFT.value(2);
-%     volumes(ii)=volume(ii).FFT.value(2);
-    %     stiffness(ii) = pressure(ii).FFT.value(find(pressure(ii).FFT.frequencies==pressure(ii).FFT.excitation_frequency))/...
-    %         volume(ii).FFT.value(find(volume(ii).FFT.frequencies==volume(ii).FFT.excitation_frequency));
+for ii=length(pressure):-1:1
     stiffness(ii) = pressure(ii).FFT.value(closestind(ii))/...
         volume(ii).FFT.value(closestind(ii));
 end
-clear ii jj
+clear ii
 
 
 % Cutting out neval harmonics of the signal
 for ii=length(Nu):-1:1
     [Nu(ii).res.value,Nu(ii).res.frequencies]=getHarmonic(...
         Nu(ii).FFT.value,Nu(ii).FFT.frequencies,...
-        pressure(ii).FFT.excitation_frequency,...
+        Nu(ii).FFT.frequencies(closestind(ii)),...
+        neval);
+    [Nu_pv(ii).res.value,Nu_pv(ii).res.frequencies]=getHarmonic(...
+        Nu_pv(ii).FFT.value,Nu_pv(ii).FFT.frequencies,...
+        Nu_pv(ii).FFT.frequencies(closestind(ii)),...
         neval);
 end
-clear ii jj
+clear ii
 
 
 
@@ -157,9 +154,11 @@ clear ii jj
 for ii=length(Nu):-1:1
     % Determination of nusselt Number for each frequency // Sort for
     % plots
-    for jj=2:length(Nu(ii).res.value)
+    for jj=1:length(Nu(ii).res.value)
         plotNu(jj).res(ii)=Nu(ii).res.value(find(...
             abs(Nu(ii).res.frequencies-pressure(ii).FFT.excitation_frequency*(jj-1))<0.03*pressure(ii).FFT.excitation_frequency));
+        plotNu_pv(jj).res(ii)=Nu_pv(ii).res.value(find(...
+            abs(Nu_pv(ii).res.frequencies-pressure(ii).FFT.excitation_frequency*(jj-1))<0.03*pressure(ii).FFT.excitation_frequency));
     end
     % only necessary for validation
     Nu_angel(ii) = angle(heatflow(ii).FFT.value(2))-angle(temperature(ii).FFT.value(2));
@@ -167,29 +166,54 @@ for ii=length(Nu):-1:1
         Nu_angel(ii)=Nu_angel(ii)+2*pi;
     end
     % Add Peclet number for comparison
-    %     EvalData(ii).Pe=2*pi*EvalData(ii).omega*param.cp.value*EvalData(ii).mass.value/...
-    %         (measureData(ii).V1*param.lambda.value*param.s.value^2);
-    % Determination of Stiffness
+        Pe(ii)=2*pi*excitationFrequency(ii)*mass(ii).value*...
+            getFluidProperty(testSetup(ii).fluid_ID,...
+        mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'c_p')/...
+            (testSetup(ii).V1.value* ...
+            getFluidProperty(testSetup(ii).fluid_ID,...
+        mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'thermal_conductivity')* ...
+            (testSetup(ii).Aw.value/testSetup(ii).V1.value)^2);
 end
 
 
 % Determine the lopfe of the first order of nusselt number
-[slope,offset]=polyfit(log10([excitationFrequency]),log10(abs([plotNu(2).res])),1);
+[slope,offset]=polyfit(log10(excitationFrequency),log10(abs([plotNu(2).res])),1);
 disp("Steigung: " + num2str(slope(1))+ " Offset: "+ num2str(offset.normr))
 
 %% Plots
 % Plot Options
-input.type = 'loglog';
-input.decades_equal = false;
+% input.type = 'loglog';
+% input.decades_equal = false;
 % input.xlimits=[1e-3,1e1];
 % input.ylimits=[1e-2,1e4];
 % [fig_Nu_pv] = plotFreqResp([EvalData.frequency],[EvalData.Nu_pv],input);
+
+if exist ('fig_Nu', 'var')
+    if isempty(fig_Nu.findobj)
+        fig_Nu=figure();
+    end
+else
 fig_Nu=figure();
+end
 % publishfig
 for ii=2:length(plotNu)
-    fig_Nu = plotFreqResp([excitationFrequency],[plotNu(ii).res],input,fig_Nu);
+    fig_Nu = plotFreqResp(excitationFrequency,plotNu(ii).res,fig_Nu,'plottype','loglog','ylabel','Nusselt','phase',true);
+     fig_Nu = plotFreqResp(excitationFrequency,plotNu_pv(ii).res,fig_Nu,'plottype','loglog','ylabel','Nusselt','phase',true);
 end
-clear ii
+if exist('fig_NuPe', 'var')
+    if isempty(fig_NuPe.findobj)
+        fig_NuPe=figure();
+    end
+else
+fig_NuPe=figure();
+end
+% publishfig
+for ii=2:length(plotNu)
+%     fig_NuPe = plotFreqResp(Pe,plotNu(ii).res,fig_NuPe,'plottype','loglog','ylabel','Nusselt','xlabel','Pe','phase',true);
+     fig_NuPe = plotFreqResp(Pe,plotNu_pv(ii).res,fig_NuPe,'plottype','loglog','ylabel','Nusselt','xlabel','Pe','phase',true);
+end
+
+
 %
 % if ~exist("fig_NuPe")
 %     fig_NuPe=figure();
@@ -211,9 +235,6 @@ clear ii
 % %  [fig_NuPe] = plotFreqResp([Pe120bar4mm],[Nu120bar4mm.complexNu],input,fig_NuPe);
 % % [fig_Nu] = plotFreqResp([EvalData.frequency],[Nu2+Nu],input,fig_Nu);
 
-[fig_Stffness] = plotFreqResp([excitationFrequency],[stiffness]/1000,input);
-
-
 
 % figure(1)
 % errorbar(volume(1).DFT.FFT.frequencies,abs(volume(1).DFT.FFT.value),volume(1).DFT.FFT.uncertainty.absolute,'.')
@@ -222,15 +243,31 @@ clear ii
 
 %% Temperaturauswertung
 % for ii=1:input.nFiles
-%     fig_temp{ii} = plotFreqResp([EvalData(ii).frequency_vek],[EvalData(ii).temperature_vek],input);
-% end
+%     fig_temp{ii} = plotFreqResp([temperature(ii).FFT.frequencies(1:10)],[temperature(ii).FFT.value(1:10)],input);
+% fig_temp{ii} = plotFreqResp([temperature_pv(ii).FFT.frequencies(1:10)],[temperature_pv(ii).FFT.value(1:10)],input,fig_temp{ii});
+% figure()
+% stem([temperature(ii).FFT.frequencies(1:10)],[abs(temperature(ii).FFT.value(1:10))]);
+% hold on
+% stem([temperature_pv(ii).FFT.frequencies(1:10)],[abs(temperature_pv(ii).FFT.value(1:10))]);
+    % end
 % for ii=1:input.nFiles
 %     fig_temp{ii} = plotFreqResp([EvalData(ii).frequency_vek],[EvalData(ii).pressure_vek],input);
 % end
 % for ii=1:input.nFiles
 %     fig_temp{ii} = plotFreqResp([EvalData(ii).frequency_vek],[EvalData(ii).volume_vek],input);
 % end
-% fig_temp_vergleich= plotFreqResp([EvalData.frequency],[EvalData.temperature],input);
-% fig_temp_vergleich= plotFreqResp([EvalData.frequency],[EvalData.temperature_pv],input,fig_temp_vergleich);
-% fig_temp_vergleich= plotFreqResp([EvalData.frequency],[EvalData.t_pv],input,fig_temp_vergleich);
 
+try
+    fig_stiffness = plotFreqResp(excitationFrequency,stiffness,fig_stiffness,'plottype','absolute','ylabel','STEIFIGKEIT in bar/l');
+catch
+    fig_stiffness=figure();
+    fig_stiffness = plotFreqResp(excitationFrequency,stiffness,fig_stiffness,'plottype','absolute');
+end
+
+
+
+% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'c_v')
+% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'c_p')
+% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'thermal_conductivity')
+% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'specific_gas_constant')
+% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'isentropic_exponent')

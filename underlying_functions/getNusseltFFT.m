@@ -34,16 +34,30 @@ end
 %Calculation of temperature difference
 % Achtung muss das hier alles im Frequenzraum sein???
 % Dann muss auch die Umgebungstemperatur im Frequenzraum vorliegen!!!
-DeltaTemperature = - temperature_ambient(ii).FFT.value + temperature(ii).FFT.value;
+DeltaTemperature = - (temperature_ambient(ii).FFT.value) + temperature(ii).FFT.value;
+DeltaTemperature(1)=0;
 
-for jj=1:nNu
-    Nu(ii).FFT.value(jj)= heatflow(ii).FFT.value(jj)./DeltaTemperature(jj);
-end
 lambda = getFluidProperty(testSetup(ii).fluid_ID,...
         mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'thermal_conductivity');
 Aw = testSetup(ii).Aw.value;
 s = testSetup(ii).Aw.value/testSetup(ii).V1.value;
-Nu(ii).FFT.value = Nu(ii).FFT.value./(Aw*s*lambda);
+const=Aw*s*lambda;
+
+Nu(ii).FFT.value(1)=heatflow(ii).FFT.value(2)/DeltaTemperature(2)/const;
+% Nu(ii).FFT.value(2)=(heatflow(ii).FFT.value(3)-DeltaTemperature(3)*Nu(ii).FFT.value(1))/DeltaTemperature(2)/const;
+
+Nu(ii).FFT.value(2)=(heatflow(ii).FFT.value(3))/DeltaTemperature(2)/const;
+% for jj=1:nNu
+%     Nu(ii).FFT.value(jj)= heatflow(ii).FFT.value(jj)./DeltaTemperature(jj);
+% end
+% 
+% 
+% 
+% lambda = getFluidProperty(testSetup(ii).fluid_ID,...
+%         mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'thermal_conductivity');
+% Aw = testSetup(ii).Aw.value;
+% s = testSetup(ii).Aw.value/testSetup(ii).V1.value;
+% Nu(ii).FFT.value = Nu(ii).FFT.value./(Aw*s*lambda);
 
 end
 

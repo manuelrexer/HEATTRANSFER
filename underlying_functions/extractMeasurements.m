@@ -30,6 +30,7 @@ for ii=length(measureData):-1:1
 end
 
 end
+
 function res = getUncValues(data,sensor,uncfield)
 try
     if contains(getValueInsideNestedStructWithPath(sensor,...
