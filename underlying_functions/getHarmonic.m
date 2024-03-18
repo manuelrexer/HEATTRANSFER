@@ -3,7 +3,8 @@ function [outputvalue,outputfrequency] = getHarmonic(value,frequency,omega,n)
 %   Version 1.0 Manuel Rexer 31.01.2022
 
 % index vector
-nx=find(abs(frequency-omega)< 0.01*omega);
+
+[~,nx]=min(abs(frequency-omega));
 nx=nx(1)-1;
 nmax=length(frequency);
 if n+1>nmax/nx

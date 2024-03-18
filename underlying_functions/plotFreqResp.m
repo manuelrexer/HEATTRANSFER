@@ -23,60 +23,53 @@ yLabel=p.Results.ylabel;
 decades_equ = p.Results.decades_equal;
 plotphase=p.Results.phase;
 
+
+% check if there are unc values
+metas=isa(vH,'LinProp');
+rows=1;
+if plotphase
+    rows=rows+1;
+end
+
 %% Frequenzgang plotten
 
+
+figure(fig)
+ch=get(fig,'Children');
+createTiles=true;
+for ii=length(ch):-1:1
+ if contains(class(ch(ii)),'TiledChartLayout')
+     createTiles=false;
+ end
+end
+if createTiles
+    tiledlayout(rows,1)
+end
+ax=nexttile(1);
+hold on
+box off
+if metas
+    errorbar(vFreqs, abs(vH.Value), abs(vH.StdUnc),'s-','MarkerFaceColor','white')
+else
+    plot(vFreqs, abs(vH), 's-','MarkerFaceColor','white')
+end
+hold on
+box off
+ax.XScale='log';
+
 switch type
-
-    case 'db'
-        figure(fig)
-        if plotphase
-            subplot(2, 1, 1);
-        end
-        semilogx(vFreqs, db(abs(vH)), 's-');
-        hold on
-        box off
-        ylabel('|H| in db');
-
-        title(name);
-        publishfig
-
     case 'loglog'
-        figure(fig)
-
-        if plotphase
-            subplot(2, 1, 1);
-        end
-
-        loglog(vFreqs, abs(vH), 's-');
-        hold on
-        box off
+        ax.YScale='log';
         if decades_equ
             decades_equal(gca)
         end
-        ylabel(yLabel)
-        xlabel(fLabel)
-        %         title(name);
-        publishfig
-
-    case 'absolute'
-
-        figure(fig)
-        box off
-        if plotphase
-            subplot(2, 1, 1);
-        end
-        semilogx(vFreqs, (abs(vH)), 's-');
-
-        hold on
-
-        ylabel(yLabel)
-        xlabel(fLabel)
-        %         title(name);
-        box off
-        publishfig
-
-
 end
+
+ylabel(yLabel)
+xlabel(fLabel)
+
+publishfig
+
 
 if ~isempty(xlimits) && ~isempty(ylimits)
     if decades_equ
@@ -90,18 +83,36 @@ elseif ~isempty(xlimits)
 elseif ~isempty(ylimits)
     ylim(ylimits)
 end
-if plotphase
-    deg=rad2deg(angle(vH));
 
-    if deg<0
-        deg=deg+360;
+if plotphase
+    ax2=nexttile(2);
+    hold on
+box off
+    if metas
+        deg=rad2deg(angle(vH.Value));
+        for ii=1:length(deg)
+            if deg(ii)<=0
+                deg(ii)=deg(ii)+360;
+            end
+        end
+        errorbar(vFreqs, deg, rad2deg(angle(vH.StdUnc)),'s-','MarkerFaceColor','white')
+    else
+        deg=rad2deg(angle(vH));
+        for ii=1:length(deg)
+            if deg(ii)<=0
+                deg(ii)=deg(ii)+360;
+            end
+        end
+        plot(vFreqs, deg,'s-','MarkerFaceColor','white')
     end
-    subplot(2, 1, 2);
-    semilogx(vFreqs, deg, 's-');
+    hold on
+box off
+    ax2.XScale='log';
     hold on
     box off
     ylabel('PHASENWINKEL in °');
-    xlabel('FREQUENZ f in Hz');
+    xlabel(fLabel);
+
     if ~isempty(xlimits)
         xlim(xlimits)
     end

@@ -12,52 +12,74 @@ function [Nu] = getNusseltFFT(heatflow,temperature,temperature_ambient,pressure,
 
 % Check input data
 for ii=length(heatflow):-1:1
-if length(heatflow(ii).FFT.value)~=length(heatflow(ii).FFT.frequencies) ||...
-        length(temperature(ii).FFT.value)~=length(temperature(ii).FFT.frequencies)
-    error('Error: in the length of the frequency and value vectors!')
-end
-if heatflow(ii).FFT.frequencies(1)~=0 || temperature(ii).FFT.frequencies(1)~=0
-    error('Error: Frequency does not start at 0!')
-end
+    if length(heatflow(ii).FFT.value)~=length(heatflow(ii).FFT.frequencies) ||...
+            length(temperature(ii).FFT.value)~=length(temperature(ii).FFT.frequencies)
+        error('Error: in the length of the frequency and value vectors!')
+    end
+    if heatflow(ii).FFT.frequencies(1)~=0 || temperature(ii).FFT.frequencies(1)~=0
+        error('Error: Frequency does not start at 0!')
+    end
 
 
-nheat=length(heatflow(ii).FFT.frequencies);
-ntemp=length(temperature(ii).FFT.frequencies);
-nNu=min([nheat,ntemp]);
+    nheat=length(heatflow(ii).FFT.frequencies);
+    ntemp=length(temperature(ii).FFT.frequencies);
+    nNu=min([nheat,ntemp]);
 
-if nheat<ntemp
-    Nu(ii).FFT.frequencies = heatflow(ii).FFT.frequencies(1:nNu);
-else
-    Nu(ii).FFT.frequencies = temperature(ii).FFT.frequencies(1:nNu);
-end
+    if nheat<ntemp
+        Nu(ii).FFT.frequencies = heatflow(ii).FFT.frequencies(1:nNu);
+    else
+        Nu(ii).FFT.frequencies = temperature(ii).FFT.frequencies(1:nNu);
+    end
 
-%Calculation of temperature difference
-% Achtung muss das hier alles im Frequenzraum sein???
-% Dann muss auch die Umgebungstemperatur im Frequenzraum vorliegen!!!
-DeltaTemperature = - (temperature_ambient(ii).FFT.value) + temperature(ii).FFT.value;
-DeltaTemperature(1)=0;
+    %Calculation of temperature difference
 
-lambda = getFluidProperty(testSetup(ii).fluid_ID,...
+    DeltaTemperature =  -(temperature_ambient(ii).FFT.value) + temperature(ii).FFT.value;
+    DeltaTemperature(1)=0;
+
+    lambda = getFluidProperty(testSetup(ii).fluid_ID,...
         mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'thermal_conductivity');
-Aw = testSetup(ii).Aw.value;
-s = testSetup(ii).Aw.value/testSetup(ii).V1.value;
-const=Aw*s*lambda;
+    Aw = testSetup(ii).Aw.value;
+    s = testSetup(ii).Aw.value/testSetup(ii).V1.value;
+    const=Aw*s*lambda;
 
-Nu(ii).FFT.value(1)=heatflow(ii).FFT.value(2)/DeltaTemperature(2)/const;
-% Nu(ii).FFT.value(2)=(heatflow(ii).FFT.value(3)-DeltaTemperature(3)*Nu(ii).FFT.value(1))/DeltaTemperature(2)/const;
+    Nu(ii).FFT.value(1)=heatflow(ii).FFT.value(2)/DeltaTemperature(2)/const;
+    Nu(ii).FFT.value(2)=(heatflow(ii).FFT.value(3)-DeltaTemperature(3)*Nu(ii).FFT.value(1))...
+        /DeltaTemperature(2)/const;
 
-Nu(ii).FFT.value(2)=(heatflow(ii).FFT.value(3))/DeltaTemperature(2)/const;
-% for jj=1:nNu
-%     Nu(ii).FFT.value(jj)= heatflow(ii).FFT.value(jj)./DeltaTemperature(jj);
-% end
-% 
-% 
-% 
-% lambda = getFluidProperty(testSetup(ii).fluid_ID,...
-%         mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'thermal_conductivity');
-% Aw = testSetup(ii).Aw.value;
-% s = testSetup(ii).Aw.value/testSetup(ii).V1.value;
-% Nu(ii).FFT.value = Nu(ii).FFT.value./(Aw*s*lambda);
+%     Nu(ii).FFT.value(2)=(heatflow(ii).FFT.value(3))/DeltaTemperature(2)/const;
+
+    if isfield(heatflow(ii).FFT,'harmonic')
+        clear DeltaTemperature const
+        unc=@LinProp;
+        lambda = unc(getFluidProperty(testSetup(ii).fluid_ID,...
+            mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'thermal_conductivity'));
+        Aw = unc(testSetup(ii).Aw.value,testSetup(ii).Aw.accuracy);
+        s = Aw/unc(testSetup(ii).V1.value,testSetup(ii).V1.accuracy);
+        const=Aw*s*lambda;
+        DeltaTemperature = + (temperature_ambient(ii).FFT.harmonic.metas) - temperature(ii).FFT.harmonic.metas;
+        DeltaTemperature(1)=0;
+        Nu(ii).FFT.metas(1)=heatflow(ii).FFT.harmonic.metas(2)/DeltaTemperature(2)/const;
+        
+%         Nu(ii).FFT.metas(2)=(heatflow(ii).FFT.harmonic.metas(3)-DeltaTemperature(3)*Nu(ii).FFT.metas(1))/...
+%             DeltaTemperature(2)/const;
+        Nu(ii).FFT.metas(2)=(heatflow(ii).FFT.harmonic.metas(3))/DeltaTemperature(2)/const;
+
+% Nu(ii).FFT.metas=conj(Nu(ii).FFT.metas);
+
+    end
+
+
+    % for jj=1:nNu
+    %     Nu(ii).FFT.value(jj)= heatflow(ii).FFT.value(jj)./DeltaTemperature(jj);
+    % end
+    %
+    %
+    %
+    % lambda = getFluidProperty(testSetup(ii).fluid_ID,...
+    %         mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'thermal_conductivity');
+    % Aw = testSetup(ii).Aw.value;
+    % s = testSetup(ii).Aw.value/testSetup(ii).V1.value;
+    % Nu(ii).FFT.value = Nu(ii).FFT.value./(Aw*s*lambda);
 
 end
 
