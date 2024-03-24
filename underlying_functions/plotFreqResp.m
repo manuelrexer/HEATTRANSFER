@@ -38,9 +38,9 @@ figure(fig)
 ch=get(fig,'Children');
 createTiles=true;
 for ii=length(ch):-1:1
- if contains(class(ch(ii)),'TiledChartLayout')
-     createTiles=false;
- end
+    if contains(class(ch(ii)),'TiledChartLayout')
+        createTiles=false;
+    end
 end
 if createTiles
     tiledlayout(rows,1)
@@ -87,26 +87,28 @@ end
 if plotphase
     ax2=nexttile(2);
     hold on
-box off
+    box off
     if metas
         deg=rad2deg(angle(vH.Value));
-        for ii=1:length(deg)
-            if deg(ii)<=0
-                deg(ii)=deg(ii)+360;
-            end
-        end
+
+%         if any(deg<=0)
+%             deg=deg+360;
+%         end
         errorbar(vFreqs, deg, rad2deg(angle(vH.StdUnc)),'s-','MarkerFaceColor','white')
     else
         deg=rad2deg(angle(vH));
-        for ii=1:length(deg)
-            if deg(ii)<=0
-                deg(ii)=deg(ii)+360;
-            end
-        end
+%         if any(deg<=0)
+%             deg=deg+360;
+%         end
+        %         for ii=1:length(deg)
+        %             if deg(ii)<=0
+        %                 deg(ii)=deg(ii)+360;
+        %             end
+        %         end
         plot(vFreqs, deg,'s-','MarkerFaceColor','white')
     end
     hold on
-box off
+    box off
     ax2.XScale='log';
     hold on
     box off

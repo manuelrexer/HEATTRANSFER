@@ -76,6 +76,11 @@ sampletime = measureData(1).model_PARAMETERS.all_parameters_array(1).value;
 % Add volume in m³
 [volume,testSetup]=addVolumeData(deflection,pressure,testSetup);
 
+
+%% Analysing load carrying area
+
+figure();plot((measureData(ii).force.value)*1e3./((measureData(ii).gas_pressure_sensor_D130.value-1)*1e5));
+
 %% Evaluate measurement data
 % DFT of pressure and Volume
 for ii=1:length(measureData)

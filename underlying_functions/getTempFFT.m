@@ -22,9 +22,7 @@ for ii=length(volume):-1:1
 
     end
     V0=unc(testSetup(ii).V0.value,testSetup(ii).V0.accuracy);
-    % initialMass(ii).value= p * 1e5 * testSetup(ii).V0.value/...
-    %     (getFluidProperty(testSetup(ii).fluid_ID,p*1e5,meanambtemp,'specific_gas_constant')*meanambtemp);
-    R=unc(296.8);
+    R=unc(getFluidProperty(testSetup(ii).fluid_ID,p*1e5,meanambtemp,'specific_gas_constant'));
     initialMass(ii).metas= p * 1e5 * V0/(R*meanambtemp);
 
     initialMass(ii).value=initialMass(ii).metas.Value;
@@ -33,8 +31,8 @@ for ii=length(volume):-1:1
     [Temperature(ii).FFT.value,Temperature(ii).FFT.frequencies] = convfft(...
         pressure(ii).FFT.value *1e5, volume(ii).FFT.value ,pressure(ii).FFT.frequencies, volume(ii).FFT.frequencies);
     Temperature(ii).FFT.value=Temperature(ii).FFT.value./...
-        (initialMass(ii).value*296.8);%getFluidProperty(testSetup(ii).fluid_ID,...
-    %         mean(pressure(ii).value)*1e5,meanambtemp,'specific_gas_constant'));
+        (initialMass(ii).value*getFluidProperty(testSetup(ii).fluid_ID,...
+             mean(pressure(ii).value)*1e5,meanambtemp,'specific_gas_constant'));
     %     disp(num2str( Temperature(ii).FFT.value))
     Temperature(ii).FFT.value=Temperature(ii).FFT.value(1:length(volume(ii).FFT.value));
     Temperature(ii).FFT.frequencies=Temperature(ii).FFT.frequencies(1:length(volume(ii).FFT.value));
@@ -46,8 +44,7 @@ for ii=length(volume):-1:1
             pressure(ii).FFT.harmonic.frequencies, volume(ii).FFT.harmonic.frequencies);
 
         Temperature(ii).FFT.harmonic.metas=Temperature(ii).FFT.harmonic.metas/...
-            (initialMass(ii).metas*R);%getFluidProperty(testSetup(ii).fluid_ID,...
-        %         mean(pressure(ii).value)*1e5,meanambtemp,'specific_gas_constant'));
+            (initialMass(ii).metas*R);
         %     disp(num2str( Temperature(ii).FFT.value))
 
         Temperature(ii).FFT.harmonic.metas=Temperature(ii).FFT.harmonic.metas(1:length(volume(ii).FFT.harmonic.value));

@@ -38,7 +38,7 @@ for ii=length(deflection):-1:1;
 
     if V1flag
         p0=unc(testSetup(ii).p0.value*1e5,testSetup(ii).p0.accuracy*1e5);
-        V0=unc(testSetup(ii).V0.value,testSetup(ii).V0.accuracy/10);
+        V0=unc(testSetup(ii).V0.value,testSetup(ii).V0.accuracy);
         p1=unc(mean(pressure(ii).value*1e5), getSumOfSystematicUnc(pressure(ii).unc));
             
         

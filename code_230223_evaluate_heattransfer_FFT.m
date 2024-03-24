@@ -9,7 +9,7 @@
 
 %% clear
 clc
-clearvars -except fig_Nu fig_NuPe fig_stiffness
+clearvars -except fig_Nu fig_NuPe fig_stiffness fig_ReIm
 unc = @LinProp;
 
 %% Options and Preperation
@@ -113,27 +113,29 @@ for ii=length(measureData):-1:1
 end
 
 
+% Adapt deadtime of keller pressure sensor
+for ii=length(pressure):-1:1
+    if strcmpi(testSetup(ii).testobject.label.literal,'gas cylinder')
+        pressure(ii).FFT.value=pressure(ii).FFT.value.*exp(1i*2*pi*pressure(ii).FFT.frequencies*2e-3);
+    end
+end
 
 % set Volume signal to zero phase dirfference and turn al other pointers
 % equivalent
 for ii=length(measureData):-1:1
     [~,closestind(ii)]=min(abs(volume(ii).FFT.frequencies-volume(ii).FFT.excitation_frequency));
 
-    phase0=angle(volume(ii).FFT.value(closestind(ii)));
-    volume(ii).FFT.value(2:end)=turnComplex(volume(ii).FFT.value(2:end),-phase0);
-    pressure(ii).FFT.value(2:end)=turnComplex(pressure(ii).FFT.value(2:end),-phase0);
-    temperature(ii).FFT.value(2:end)=turnComplex(temperature(ii).FFT.value(2:end),-phase0);
-    temperature_ambient(ii).FFT.value(2:end)=turnComplex(temperature_ambient(ii).FFT.value(2:end),-phase0);
-
-    clear phase0
+    %     phase0=angle(volume(ii).FFT.value(closestind(ii)));
+    %     volume(ii).FFT.value(2:end)=turnComplex(volume(ii).FFT.value(2:end),-phase0);
+    %     pressure(ii).FFT.value(2:end)=turnComplex(pressure(ii).FFT.value(2:end),-phase0);
+    %     temperature(ii).FFT.value(2:end)=turnComplex(temperature(ii).FFT.value(2:end),-phase0);
+    %     temperature_ambient(ii).FFT.value(2:end)=turnComplex(temperature_ambient(ii).FFT.value(2:end),-phase0);
+    %
+    %     clear phase0
 end
 
 
 % Evaluation Method
-
-% for ii=length(testSetup):-1:1
-%     testSetup(ii).fluid_ID='https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a'
-% end
 
 % extract the relevant frequencies and add uncertainty to all relevant
 % values
@@ -159,11 +161,14 @@ for ii=length(Nu):-1:1
         plotNu(jj).res(ii)=Nu(ii).FFT.metas(jj);
         plotNu_pv(jj).res(ii)=Nu_pv(ii).FFT.metas(jj);
     end
-    % only necessary for validation
-    %     Nu_angel(ii) = angle(heatflow(ii).FFT.value(2))-angle(temperature(ii).FFT.value(2));
-    %     if Nu_angel(ii)<0
-    %         Nu_angel(ii)=Nu_angel(ii)+2*pi;
-    %     end
+    % Phase between Heatflux and Temperature for validation
+    %     angle(Nu_pv(ii).FFT.metas(1))
+    %     angle(heatflow(ii).FFT.harmonic.metas(2)/-temperature(ii).FFT.harmonic.metas(2))
+    Nu_angle(ii) = angle(heatflow(ii).FFT.harmonic.metas(2).Value)-angle(-temperature_pv(ii).FFT.harmonic.metas(2).Value);
+    if Nu_angle(ii)<0
+        Nu_angle(ii)=Nu_angle(ii)+2*pi;
+    end
+
     % Add Peclet number for comparison
     Pe(ii)=2*pi*excitationFrequency(ii)*mass(ii).value*...
         getFluidProperty(testSetup(ii).fluid_ID,...
@@ -186,73 +191,84 @@ for ii=length(pressure):-1:1
         volume(ii).FFT.harmonic.metas(2);
 
     V1=unc(testSetup(ii).V1.value,testSetup(ii).V1.accuracy);
-     stiffness_dimless(ii)=stiffness(ii)*V1 /  mean(pressure(ii).value);
+    stiffness_dimless(ii) = stiffness(ii) * V1 /  mean(pressure(ii).value);
 
-% Model with complex Nusselt number
+    % Model with complex Nusselt number
 
-    gamma=getFluidProperty(testSetup(ii).fluid_ID,...
-        mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'isentropic_exponent');
-    lambda = unc(getFluidProperty(testSetup(ii).fluid_ID,...
-        mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'thermal_conductivity'));
-    Aw = unc(testSetup(ii).Aw.value,testSetup(ii).Aw.accuracy);
-    s = Aw/V1;
-    m=mass(ii).metas;
-    R=296;
-    Nusselt_c(ii)=1*Pe(ii)^(0.5)-1i*Pe(ii)^(0.5)+3;
+    %     gamma=getFluidProperty(testSetup(ii).fluid_ID,...
+    %         mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'isentropic_exponent');
+    %     lambda = unc(getFluidProperty(testSetup(ii).fluid_ID,...
+    %         mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'thermal_conductivity'));
+    %     Aw = unc(testSetup(ii).Aw.value,testSetup(ii).Aw.accuracy);
+    %     s = Aw/V1;
+    %     m=mass(ii).metas;
+    %     R=296;
 
-    stiffness_dimless_modell(ii)=(1i*gamma*Nusselt_c(ii)/Pe(ii)+gamma)/...
-        (1i*gamma*Nusselt_c(ii)/Pe(ii)+1);
- stiffness_dimless_Pelz(ii)=(1i*gamma*3/Pe(ii)+gamma)/...
-        (1i*gamma*3/Pe(ii)+1);
+    Nusselt_c(ii)=1*Pe(ii)^(0.5)+3+1i*Pe(ii)^(0.5);
+    stiffness_dimless_modell(ii)=-(1i*gamma*Nusselt_c(ii)/Pe(ii)-gamma)/...
+        (1i*gamma*Nusselt_c(ii)/Pe(ii)-1);
+
+    stiffness_dimless_Pelz(ii)=-(1i*gamma*3/Pe(ii)-gamma)/...
+        (1i*gamma*3/Pe(ii)-1);
 end
 clear ii
 
 
 %% Nusselt Plots
-% Plot Options
-
-% input.xlimits=[1e-3,1e1];
-% input.ylimits=[1e-2,1e4];
-% [fig_Nu_pv] = plotFreqResp([EvalData.frequency],[EvalData.Nu_pv],input);
 
 if exist ('fig_Nu', 'var')
     if isempty(fig_Nu.findobj)
-        fig_Nu=figure();
+        fig_Nu=figure('name','Nu(f)');
     end
 else
-    fig_Nu=figure();
+    fig_Nu=figure('name','Nu(f)');
 end
 % publishfig
 for ii=1;%1:length(plotNu)
-%         fig_Nu = plotFreqResp(excitationFrequency,plotNu(ii).res,fig_Nu,'plottype','loglog','ylabel','Nusselt','phase',true);
+    %         fig_Nu = plotFreqResp(excitationFrequency,plotNu(ii).res,fig_Nu,'plottype','loglog','ylabel','Nusselt','phase',true);
     fig_Nu = plotFreqResp(excitationFrequency,plotNu_pv(ii).res,fig_Nu,'plottype','loglog','ylabel','Nusselt','phase',true);
 end
 if exist('fig_NuPe', 'var')
     if isempty(fig_NuPe.findobj)
-        fig_NuPe=figure();
+        fig_NuPe=figure('name','Nu(Pe)');
     end
 else
-    fig_NuPe=figure();
+    fig_NuPe=figure('name','Nu(Pe)');
 end
 % publishfig
-fig_NuPe = plotFreqResp(Pe,[Nu_test.test],fig_NuPe,'plottype','loglog','ylabel','Nusselt','xlabel','Pe','phase',true);
+% fig_NuPe = plotFreqResp(Pe,[Nu_test.test],fig_NuPe,'plottype','loglog','ylabel','Nusselt','xlabel','Pe','phase',true);
 for ii=1;%1:length(plotNu)
     %     fig_NuPe = plotFreqResp(Pe,plotNu(ii).res,fig_NuPe,'plottype','loglog','ylabel','Nusselt','xlabel','Pe','phase',true);
     fig_NuPe = plotFreqResp(Pe,plotNu_pv(ii).res,fig_NuPe,'plottype','loglog','ylabel','Nusselt','xlabel','Pe','phase',true);
 end
 
-fig_ReIm=figure('name', 'Real- and imag Part of Nusseltnumber');
+% figure('name','Phase Q/T')
+% semilogx(Pe,rad2deg(Nu_angle))
+if exist('fig_ReIm', 'var')
+    if isempty(fig_ReIm.findobj)
+        fig_ReIm=figure('name','Real- and imag Part of Nusseltnumber');
+        publishfig
+    end
+else
+    fig_ReIm=figure('name','Nu(Pe)');
+    publishfig
+end
+
 tiledlayout(1,2)
 ax1=nexttile;
 plot(Pe,real([plotNu_pv(1).res]))
 box off
 ax1.XScale='log';
 ax1.YScale='log';
+xlabel('Pe')
+ylabel('Re(Nu)')
 ax2=nexttile;
 plot(Pe,imag([plotNu_pv(1).res]))
 box off
 ax2.XScale='log';
 ax2.YScale='log';
+xlabel('Pe')
+ylabel('Im(Nu)')
 
 
 %Comparison to Hartig
@@ -261,32 +277,10 @@ load MeanOscillatingPecletNumber4mm120bar40bar0_7L.mat
 Pe120bar4mm = k;
 load NusseltFit4mm120bar40bar0_7L.mat
 Nu120bar4mm = resultsFitKornhauser;
-% % [fig_Nu] = plotFreqResp([EvalData.frequency],[Nu],input);
-% % [fig_Nu] = plotFreqResp([EvalData.frequency],[Nu2],input,fig_Nu);
-% [fig_Nu] = plotFreqResp([Nu120bar4mm.freq],[Nu120bar4mm.complexNu],input,fig_Nu);
-[fig_NuPe] = plotFreqResp([Pe120bar4mm],[Nu120bar4mm.complexNu],fig_NuPe,'plottype','loglog','phase',true);
+
+% [fig_NuPe] = plotFreqResp([Pe120bar4mm],[Nu120bar4mm.complexNu],fig_NuPe,'plottype','loglog','phase',true);
 
 
-% figure(1)
-% errorbar(volume(1).DFT.FFT.frequencies,abs(volume(1).DFT.FFT.value),volume(1).DFT.FFT.uncertainty.absolute,'.')
-% figure(2)
-% errorbar(volume(1).DFT.FFT.frequencies,angle(volume(1).DFT.FFT.value),volume(1).DFT.FFT.uncertainty.phase,'.')
-
-%% Temperaturauswertung
-% for ii=1:input.nFiles
-%     fig_temp{ii} = plotFreqResp([temperature(ii).FFT.frequencies(1:10)],[temperature(ii).FFT.value(1:10)],input);
-% fig_temp{ii} = plotFreqResp([temperature_pv(ii).FFT.frequencies(1:10)],[temperature_pv(ii).FFT.value(1:10)],input,fig_temp{ii});
-% figure()
-% stem([temperature(ii).FFT.frequencies(1:10)],[abs(temperature(ii).FFT.value(1:10))]);
-% hold on
-% stem([temperature_pv(ii).FFT.frequencies(1:10)],[abs(temperature_pv(ii).FFT.value(1:10))]);
-% end
-% for ii=1:input.nFiles
-%     fig_temp{ii} = plotFreqResp([EvalData(ii).frequency_vek],[EvalData(ii).pressure_vek],input);
-% end
-% for ii=1:input.nFiles
-%     fig_temp{ii} = plotFreqResp([EvalData(ii).frequency_vek],[EvalData(ii).volume_vek],input);
-% end
 %% Unsicherheitsplots
 if false
     figure('Name','volume abs');
@@ -325,6 +319,19 @@ if false
         %         ylim([0,5])
     end
 
+    figure('Name','pressure phase')
+    tiledlayout("flow","TileSpacing","compact")
+    for ii=length(pressure):-1:1
+        nexttile
+
+        stem(pressure(ii).FFT.frequencies,phase(pressure(ii).FFT.value))
+        %         hold on
+        %         errorbar(pressure(ii).FFT.frequencies,phase(pressure(ii).FFT.value),phase(pressure(ii).FFT.harmonic.metas.StdUnc),'LineStyle','none')
+        box off
+        %
+    end
+
+
     figure('Name','pressure abs')
     tiledlayout("flow","TileSpacing","compact")
     for ii=length(pressure):-1:1
@@ -338,27 +345,26 @@ if false
     end
 
 end
+
 %% Steifigkeitsplots
-try
-    fig_stiffness = plotFreqResp(excitationFrequency,stiffness,fig_stiffness,'plottype','absolute','ylabel','STEIFIGKEIT in bar/l','phase',true);
-catch
-    fig_stiffness=figure();
-    fig_stiffness = plotFreqResp(excitationFrequency,stiffness,fig_stiffness,'plottype','absolute','ylabel','STEIFIGKEIT in bar/l','phase',true);
-end
+% try
+%     fig_stiffness = plotFreqResp(excitationFrequency,stiffness,fig_stiffness,'plottype','absolute','ylabel','STEIFIGKEIT in bar/l','phase',true);
+% catch
+%     fig_stiffness=figure('name','Stiffness K');
+%     fig_stiffness = plotFreqResp(excitationFrequency,stiffness,fig_stiffness,'plottype','absolute','ylabel','STEIFIGKEIT in bar/l','phase',true);
+% end
 
 try
-    fig_stiffness_dimless = plotFreqResp(Pe,-stiffness_dimless,fig_stiffness_dimless,'plottype','absolute','ylabel','STEIFIGKEIT in bar/l','phase',true);
+    fig_stiffness_dimless = plotFreqResp(Pe,stiffness_dimless,fig_stiffness_dimless,'plottype','absolute','ylabel','STEIFIGKEIT K^+','phase',true);
 catch
-    fig_stiffness_dimless=figure('name','Dimensionslose Steifigkeit');
-    fig_stiffness_dimless = plotFreqResp(Pe,-stiffness_dimless,fig_stiffness_dimless,'plottype','absolute','ylabel','STEIFIGKEIT in bar/l','phase',true);
+    fig_stiffness_dimless=figure('name','Dim.less Stiffness K+');
+    fig_stiffness_dimless = plotFreqResp(Pe,stiffness_dimless,fig_stiffness_dimless,'plottype','absolute','ylabel','STEIFIGKEIT K^+','phase',true);
 end
-fig_stiffness_dimless = plotFreqResp(Pe,stiffness_dimless_modell,fig_stiffness_dimless,'plottype','absolute','ylabel','STEIFIGKEIT in bar/l','phase',true);
-fig_stiffness_dimless = plotFreqResp(Pe,stiffness_dimless_Pelz,fig_stiffness_dimless,'plottype','absolute','ylabel','STEIFIGKEIT in bar/l','phase',true);
+fig_stiffness_dimless = plotFreqResp(Pe,stiffness_dimless_modell,fig_stiffness_dimless,'plottype','absolute','ylabel','STEIFIGKEIT K^+','phase',true);
+% fig_stiffness_dimless = plotFreqResp(Pe,stiffness_dimless_Pelz,fig_stiffness_dimless,'plottype','absolute','ylabel','STEIFIGKEIT K^+','phase',true);
 
-% figure();loglog(Pe,real(Nusselt_c.Value))
-% hold on
-% loglog(Pe,imag(Nusselt_c.Value))
-% figure();plot(phase(Nusselt_c.Value))
+%% Test
+
 % getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'c_v')
 % getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'c_p')
 % getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'thermal_conductivity')

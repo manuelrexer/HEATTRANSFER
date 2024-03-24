@@ -32,8 +32,8 @@ for ii=length(heatflow):-1:1
     end
 
     %Calculation of temperature difference
-
-    DeltaTemperature =  -(temperature_ambient(ii).FFT.value) + temperature(ii).FFT.value;
+% +(temperature_ambient(ii).FFT.value) 
+    DeltaTemperature =  - temperature(ii).FFT.value;
     DeltaTemperature(1)=0;
 
     lambda = getFluidProperty(testSetup(ii).fluid_ID,...
@@ -56,13 +56,13 @@ for ii=length(heatflow):-1:1
         Aw = unc(testSetup(ii).Aw.value,testSetup(ii).Aw.accuracy);
         s = Aw/unc(testSetup(ii).V1.value,testSetup(ii).V1.accuracy);
         const=Aw*s*lambda;
-        DeltaTemperature = + (temperature_ambient(ii).FFT.harmonic.metas) - temperature(ii).FFT.harmonic.metas;
-        DeltaTemperature(1)=0;
-        Nu(ii).FFT.metas(1)=heatflow(ii).FFT.harmonic.metas(2)/DeltaTemperature(2)/const;
+        DeltaTemperatureharm =  - temperature(ii).FFT.harmonic.metas;
+        DeltaTemperatureharm(1)=0;
+        Nu(ii).FFT.metas(1)=heatflow(ii).FFT.harmonic.metas(2)/DeltaTemperatureharm(2)/const;
         
 %         Nu(ii).FFT.metas(2)=(heatflow(ii).FFT.harmonic.metas(3)-DeltaTemperature(3)*Nu(ii).FFT.metas(1))/...
 %             DeltaTemperature(2)/const;
-        Nu(ii).FFT.metas(2)=(heatflow(ii).FFT.harmonic.metas(3))/DeltaTemperature(2)/const;
+        Nu(ii).FFT.metas(2)=(heatflow(ii).FFT.harmonic.metas(3))/DeltaTemperatureharm(2)/const;
 
 % Nu(ii).FFT.metas=conj(Nu(ii).FFT.metas);
 
