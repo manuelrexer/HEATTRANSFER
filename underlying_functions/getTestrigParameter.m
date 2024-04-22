@@ -45,7 +45,7 @@ for ii=length(measureData):-1:1
             importantParameter.V0.accuracy = importantParameter.V0.accuracy/1000;
             importantParameter.V0.unit = 'M3';
         end
-        importantParameter.V0.value = importantParameter.V0.value - 0.2e-4;
+        importantParameter.V0.value = importantParameter.V0.value - 20e-6;
 
         importantParameter.Aw.value = 4*pi*(3/4/pi*importantParameter.V0.value)^(2/3);
         importantParameter.Aw.accuracy =abs(2/3*(3/4/pi)^(2/3)*(importantParameter.V0.value)^(-1/3)* importantParameter.V0.accuracy);
@@ -66,12 +66,12 @@ for ii=length(measureData):-1:1
         if isfield(testobject.hasProperty,'V1')
             importantParameter.V1 = simplyfyPropertyStruct(testobject.hasProperty.V1);
             if strcmpi(testobject.label.literal,'air spring')
-                importantParameter.V1.value =importantParameter.V1.value + 0.0*1e-3;
-                importantParameter.V0.value =importantParameter.V0.value + 0.0*1e-3;
+                importantParameter.V1.value =importantParameter.V1.value + 84*1e-6;
+                importantParameter.V0.value =importantParameter.V0.value + 84*1e-6;
             end
             if strcmpi(testobject.label.literal,'gas cylinder')
-                importantParameter.V1.value =importantParameter.V1.value + 10*1e-6;
-                importantParameter.V0.value =importantParameter.V0.value + 10*1e-6;
+                importantParameter.V1.value =importantParameter.V1.value + 9.5*1e-6;
+                importantParameter.V0.value =importantParameter.V0.value + 9.5*1e-6;
             end
         end
         importantParameter.Ad = simplyfyPropertyStruct(testobject.hasProperty.A_d);

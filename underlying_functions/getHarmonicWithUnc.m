@@ -15,14 +15,28 @@ for ii=length(datastr):-1:1
         datastr(ii).FFT.frequencies,...
         excitationFrequency(ii),neval);
 
+    [uncmag,~]=getHarmonic(...
+        datastr(ii).FFT.uncertainty.absolute,...
+        datastr(ii).FFT.frequencies,...
+        excitationFrequency(ii),neval);
+    [uncphase,~]=getHarmonic(...
+        datastr(ii).FFT.uncertainty.phase,...
+        datastr(ii).FFT.frequencies,...
+        excitationFrequency(ii),neval);
+
     datastr(ii).FFT.harmonic.value=values;
     datastr(ii).FFT.harmonic.frequencies=frequencies;
     datastr(ii).FFT.harmonic.uncertainty.complex=uncvalues;
+    datastr(ii).FFT.harmonic.uncertainty.absolute= uncmag;
+    datastr(ii).FFT.harmonic.uncertainty.phase=uncphase;
     % determine uncertaintyvalues
     % all frequencies
     for jj=length(values):-1:1
-        datastr(ii).FFT.harmonic.metas(jj) = unc(complex(values(jj)),...
-            diag([real(uncvalues(jj))^2,imag(uncvalues(jj))^2]));
+        %         datastr(ii).FFT.harmonic.metas(jj) = unc(complex(values(jj)),...
+        %             diag([real(uncvalues(jj))^2,imag(uncvalues(jj))^2]));
+        mag=unc(abs(values(jj)),uncmag(jj));
+        pha=unc(phase(values(jj)),uncphase(jj));
+        datastr(ii).FFT.harmonic.metas(jj) = mag*cos(pha)+1i*mag*sin(pha);
     end
     % adapt omega=0
     % TODO
