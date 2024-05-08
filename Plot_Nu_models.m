@@ -2,14 +2,16 @@
 % Definition of Peclet number
 Pe= logspace(-3,5,100);
 
-
 % Lee
 z=(1+1i).*sqrt(Pe/2);
 Nu.Lee=sqrt(Pe/2).*((1+1i).*tanh(z))./(1-tanh(z)./z);
+
+Pe=Pe*4;
 % Kornhauser
-Nu.Korn=(1+1i)*1.46*Pe.^(0.69);
+Nu.Korn=(1+1i)*0.56*Pe.^(0.69);
 %Lekic
-Nu.Lekic=(2.89*Pe.^(0.56) + 5.36) + 1i*(3.86*Pe.^(0.46) - 1.46);
+Nu.Lekic=(1.33*Pe.^(0.56) + 5.36) + 1i*(2.04*Pe.^(0.46) - 1.46);
+Pe=Pe/4;
 
 
 fnames=fieldnames(Nu);
@@ -28,7 +30,7 @@ for ii=1:length(fnames)
     box off
 end
 
-if false
+if true
     load MeanOscillatingPecletNumber4mm120bar40bar0_7L.mat
     Pe120bar4mm = k;
     load NusseltFit4mm120bar40bar0_7L.mat
@@ -62,7 +64,7 @@ setfigpos(13.7,10.3,'m')
 tiledlayout(2,1,"Padding","tight","TileSpacing","tight")
 
 for ii=1:length(fnames)
-    K.(fnames{ii})=-(1i*gamma*Nu.(fnames{ii})./Pe-gamma)./...
+    K.(fnames{ii})=(1i*gamma*Nu.(fnames{ii})./Pe-gamma)./...
         (1i*gamma*Nu.(fnames{ii})./Pe-1);
 
     nexttile(1)

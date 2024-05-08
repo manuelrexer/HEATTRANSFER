@@ -6,7 +6,7 @@ function [volume,testSetup] = addVolumeData(deflection,pressure, testSetup)
 % area: in m^2
 unc=@LinProp;
 
-for ii=length(deflection):-1:1;
+for ii=length(deflection):-1:1
     % Calculation of Delta V form deflection in [m^3]
     % Check for Units
     if strcmpi(deflection(ii).unit,'MM')||strcmpi(deflection(ii).unit,'MILLIM')
@@ -37,15 +37,16 @@ for ii=length(deflection):-1:1;
     end
 
     if V1flag
-        p0=unc(testSetup(ii).p0.value*1e5,testSetup(ii).p0.accuracy*1e5);
-        V0=unc(testSetup(ii).V0.value,testSetup(ii).V0.accuracy);
-        p1=unc(mean(pressure(ii).value*1e5), getSumOfSystematicUnc(pressure(ii).unc));
-            
+        p0=unc(testSetup(ii).p0.value*1e5,testSetup(ii).p0.accuracy*1e5/sqrt(3));
+        V0=unc(testSetup(ii).V0.value,testSetup(ii).V0.accuracy/sqrt(3));
+        
+        p1=unc(mean(pressure(ii).value*1e5), getSumOfSystematicUnc(pressure(ii).unc,mean(pressure(ii).value*1e5))/sqrt(3));
+        % ToDo: Include statistic Uncertainty    
         
         V1 = p0*V0/p1;            %[Pa*m^3/Pa] = [m^3]
 
         testSetup(ii).V1.value = V1.Value;
-        testSetup(ii).V1.accuracy = V1.StdUnc;
+        testSetup(ii).V1.accuracy = V1.StdUnc*sqrt(3);
         testSetup(ii).V1.metas = V1;
         testSetup(ii).V1.unit = 'M3';
         testSetup(ii).V1.name = 'load volume';
@@ -58,9 +59,9 @@ for ii=length(deflection):-1:1;
     vol.value = V1.Value + DeltaV.value; %[m^3 + m^3]
     
     % Mapping of systematic uncertainty
-    vol.unc.bias = deflection(ii).unc.bias * fact * abs(testSetup(ii).Ad.value)  + V1.StdUnc ;
-    vol.unc.sensitivity = max((deflection(ii).unc.sensitivity .* abs(deflection(ii).value) *fact * abs(testSetup(ii).Ad.value) + ...
-        testSetup(ii).Ad.accuracy * (abs(deflection(ii).value))*fact));%./vol.value);
+    vol.unc.bias = (deflection(ii).unc.bias * fact * abs(testSetup(ii).Ad.value))  +  testSetup(ii).V1.accuracy ;
+    vol.unc.sensitivity = deflection(ii).unc.sensitivity + ...
+        (testSetup(ii).Ad.accuracy / abs(testSetup(ii).Ad.value));
     vol.unc.linearity = deflection(ii).unc.linearity * fact * abs(testSetup(ii).Ad.value);
     vol.unc.hysteresis = deflection(ii).unc.hysteresis  * fact * abs(testSetup(ii).Ad.value);
     
@@ -75,7 +76,7 @@ end
 %         testSetup(ii).Ad.accuracy * (abs(deflection(ii).value))*fact))
 % plot(volume(ii).value)
 
-function delta=getSumOfSystematicUnc (unc)
+function delta=getSumOfSystematicUnc (unc,mean)
 
 fields=fieldnames(unc);
 delta=0;
@@ -84,7 +85,9 @@ for ii=length(fields):-1:1
         unc.(fields{ii})=0;
     end
     if ~strcmpi(fields{ii},'sensitivity')
-    delta=delta+unc.(fields{ii});
+    delta=delta+unc.(fields{ii})^2;
+    elseif strcmpi(fields{ii},'sensitivity')
+        delta=delta+(unc.(fields{ii})*mean)^2;
     end
 end
 delta=sqrt(delta);

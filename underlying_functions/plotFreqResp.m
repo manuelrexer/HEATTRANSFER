@@ -10,6 +10,7 @@ addOptional(p, 'xlabel', 'FREQUENZ in Hz');
 addOptional(p, 'ylabel', '|H|');
 addOptional(p, 'flimits', []);
 addOptional(p, 'ylimits', []);
+addOptional(p, 'plotOpts',{'s-'})
 parse(p, varargin{:})
 
 type = p.Results.plottype;
@@ -20,12 +21,23 @@ xlimits=p.Results.flimits;
 ylimits=p.Results.ylimits;
 fLabel=p.Results.xlabel;
 yLabel=p.Results.ylabel;
+plotOpts=p.Results.plotOpts;
 decades_equ = p.Results.decades_equal;
 plotphase=p.Results.phase;
 
 
 % check if there are unc values
 metas=isa(vH,'LinProp');
+if metas
+    for ii=length(vH):-1:1
+        if abs(vH(ii).Value)-abs(vH(ii).StdUnc)<0.01
+            yneg(ii)=abs(vH(ii).Value)-0.01;
+        else
+            yneg(ii) = abs(vH(ii).StdUnc);
+        end
+        ypos(ii) = abs(vH(ii).StdUnc);
+    end
+end
 rows=1;
 if plotphase
     rows=rows+1;
@@ -43,15 +55,15 @@ for ii=length(ch):-1:1
     end
 end
 if createTiles
-    tiledlayout(rows,1)
+    tiledlayout(rows,1,"TileSpacing","compact","Padding","tight")
 end
 ax=nexttile(1);
 hold on
 box off
 if metas
-    errorbar(vFreqs, abs(vH.Value), abs(vH.StdUnc),'s-','MarkerFaceColor','white')
+    errorbar(vFreqs, abs(vH.Value), yneg ,  ypos,plotOpts{:},'MarkerFaceColor','white')
 else
-    plot(vFreqs, abs(vH), 's-','MarkerFaceColor','white')
+    plot(vFreqs, abs(vH), plotOpts{:},'MarkerFaceColor','white')
 end
 hold on
 box off
@@ -66,7 +78,9 @@ switch type
 end
 
 ylabel(yLabel)
-xlabel(fLabel)
+if ~plotphase
+    xlabel(fLabel)
+end
 
 publishfig
 
@@ -94,7 +108,7 @@ if plotphase
 %         if any(deg<=0)
 %             deg=deg+360;
 %         end
-        errorbar(vFreqs, deg, rad2deg(angle(vH.StdUnc)),'s-','MarkerFaceColor','white')
+        errorbar(vFreqs, deg, rad2deg(angle(vH.StdUnc)),plotOpts{:},'MarkerFaceColor','white')
     else
         deg=rad2deg(angle(vH));
 %         if any(deg<=0)
@@ -105,7 +119,7 @@ if plotphase
         %                 deg(ii)=deg(ii)+360;
         %             end
         %         end
-        plot(vFreqs, deg,'s-','MarkerFaceColor','white')
+        plot(vFreqs, deg,plotOpts{:},'MarkerFaceColor','white')
     end
     hold on
     box off
