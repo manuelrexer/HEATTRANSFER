@@ -29,11 +29,16 @@ try
 %         NuImag=[NuImag;imag(res{ii}.exp.Nu)];
 %         NuUncReal=[NuUncReal;real(res{ii}.exp.Nu_StdUnc)];
 %         NuUncImag=[NuUncImag;imag(res{ii}.exp.Nu_StdUnc)];
-        Pe=[Pe;res{ii}.exp.Pe([1:7 9 15 25 29])];
-        NuReal=[NuReal;real(res{ii}.exp.Nu([1:7 9 15 25 29]))];
-        NuImag=[NuImag;imag(res{ii}.exp.Nu([1:7 9 15 25 29]))];
-        NuUncReal=[NuUncReal;real(res{ii}.exp.Nu_StdUnc([1:7 9 15 25 29]))];
-        NuUncImag=[NuUncImag;imag(res{ii}.exp.Nu_StdUnc([1:7 9 15 25 29]))];
+
+        inds=[1:7 9 15 25 29];
+        while inds(end)>length(res{ii}.exp.Pe)
+            inds=inds(1:end-1);
+        end
+        Pe=[Pe;res{ii}.exp.Pe([inds])];
+        NuReal=[NuReal;real(res{ii}.exp.Nu([inds]))];
+        NuImag=[NuImag;imag(res{ii}.exp.Nu([inds]))];
+        NuUncReal=[NuUncReal;real(res{ii}.exp.Nu_StdUnc([inds]))];
+        NuUncImag=[NuUncImag;imag(res{ii}.exp.Nu_StdUnc([inds]))];
     end
 
     cd(cd0)
@@ -48,7 +53,7 @@ NuImag_cleared=NuImag(NuImag>0);
 PeImag=Pe;
 PeImag(inds)=[];
 
-[fitresult, gof] = createFits(Pe, NuReal, PeImag, NuImag_cleared);
+[fitresult_all, gof_all] = createFits(Pe, NuReal, PeImag, NuImag_cleared);
 
 
 %% Plots
@@ -57,13 +62,13 @@ for ii = length(res):-1:1
     switch res{ii}.exp.Properties.CustomProperties.TestObject
         case 'Accumulator_1.3l'
             %accumulator 1,3l
-            plotopts={'ok','Markersize',5};
+            plotopts={'.k','Markersize',15};
         case 'Accumulator_0.6l'
             %accumulator 0.6l
-            plotopts={'ok','Markersize',4};
+            plotopts={'.k','Markersize',12};
         case 'Accumulator_0.1l'
             %accumulator 0.1l
-            plotopts={'ok','Markersize',3};
+            plotopts={'.k','Markersize',9};
         case 'airspring'
             %airspring
             plotopts={'dk','Markersize',4};
@@ -115,22 +120,22 @@ end
 figure(fig_ReIm)
 setfigpos(13.7,6.9,'m')
 nexttile(1)
-plot(fitresult{1})
+plot(fitresult_all{1})
 box off
 hold on
 xlabel('Pe')
 ylabel('Re(Nu)')
 nexttile(2)
-plot(fitresult{2})
+plot(fitresult_all{2})
 xlabel('Pe')
 ylabel('Im(Nu)')
 hold on
 box off
 
-disp(['Realpart: a=',num2str(fitresult{1}.a),' b=',num2str(fitresult{1}.b),' c=',num2str(fitresult{1}.c),' d=',num2str(fitresult{1}.d),' e=',num2str(fitresult{1}.e)])
-disp(['Imagpart: a=',num2str(fitresult{2}.a),' b=',num2str(fitresult{2}.b)])
-fit1=fitresult;
-clear fitresult
+disp(['Realpart: a=',num2str(fitresult_all{1}.a),' b=',num2str(fitresult_all{1}.b),' c=',num2str(fitresult_all{1}.c),' d=',num2str(fitresult_all{1}.d),' e=',num2str(fitresult_all{1}.e)])
+disp(['Imagpart: a=',num2str(fitresult_all{2}.a),' b=',num2str(fitresult_all{2}.b)])
+
+
 
 
 inds=find(NuReal<NuUncReal);
@@ -146,7 +151,7 @@ NuImag_cleared(inds)=[];
 PeImag=Pe;
 PeImag(inds)=[];
 
-[fitresult, gof] = createFits(PeReal, NuRealCleared, PeImag, NuImag_cleared);
+[fitresult_cleared, gof_cleared] = createFits(PeReal, NuRealCleared, PeImag, NuImag_cleared);
 
 if exist('fig_ReIm_clear', 'var')
     if isempty(fig_ReIm_clear.findobj)
@@ -186,17 +191,17 @@ decades_equal(gca,[1e0,1e5],[1e-1,1e4])
 
 setfigpos(13.7,6.9,'m')
 nexttile(1)
-plot(fitresult{1})
+plot(fitresult_cleared{1})
 box off
 hold on
 xlabel('Pe')
 ylabel('Re(Nu)')
 nexttile(2)
-plot(fitresult{2})
+plot(fitresult_cleared{2})
 xlabel('Pe')
 ylabel('Im(Nu)')
 hold on
 box off
 
-disp(['Realpart: a=',num2str(fitresult{1}.a),' b=',num2str(fitresult{1}.b),' c=',num2str(fitresult{1}.c),' d=',num2str(fitresult{1}.d),' e=',num2str(fitresult{1}.e)])
-disp(['Imagpart: a=',num2str(fitresult{2}.a),' b=',num2str(fitresult{2}.b)])
+disp(['Realpart: a=',num2str(fitresult_cleared{1}.a),' b=',num2str(fitresult_cleared{1}.b),' c=',num2str(fitresult_cleared{1}.c),' d=',num2str(fitresult_cleared{1}.d),' e=',num2str(fitresult_cleared{1}.e)])
+disp(['Imagpart: a=',num2str(fitresult_cleared{2}.a),' b=',num2str(fitresult_cleared{2}.b)])

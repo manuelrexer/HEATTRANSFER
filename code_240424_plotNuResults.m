@@ -29,6 +29,8 @@ catch e
 end
 
 
+
+
 %% Plot
 
 if exist('fig_NuPe', 'var')
@@ -44,13 +46,13 @@ for ii = length(res):-1:1
     switch res{ii}.exp.Properties.CustomProperties.TestObject
         case 'Accumulator_1.3l'
             %accumulator 1,3l
-            plotopts={'o','Markersize',5};
+            plotopts={'.','Markersize',15};
         case 'Accumulator_0.6l'
             %accumulator 0.6l
-            plotopts={'o','Markersize',4};
+            plotopts={'.','Markersize',12};
         case 'Accumulator_0.1l'
             %accumulator 0.1l
-            plotopts={'o','Markersize',3};
+            plotopts={'.','Markersize',9};
         case 'airspring'
             %airspring
             plotopts={'d','Markersize',4};
@@ -65,7 +67,7 @@ for ii = length(res):-1:1
         diag([real(res{ii}.exp.Nu_StdUnc(jj)).^2,imag(res{ii}.exp.Nu_StdUnc(jj)).^2]));
     end
     fig_NuPe = plotFreqResp( ...
-        res{ii}.exp.Pe,res{ii}.exp.Nu, ...
+        res{ii}.exp.Pe,res{ii}.exp.Nu_metas, ...
         fig_NuPe, ...
         'plottype','loglog', ...
         'ylabel','Nusselt', ...

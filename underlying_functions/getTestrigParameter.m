@@ -74,8 +74,8 @@ for ii=length(measureData):-1:1
         if isfield(testobject.hasProperty,'V1')
             importantParameter.V1 = simplyfyPropertyStruct(testobject.hasProperty.V1);
             if strcmpi(testobject.label.literal,'air spring')
-                importantParameter.V1.value =1*(importantParameter.V1.value + 70*1e-6);
-                importantParameter.V0.value =1*(importantParameter.V0.value + 70*1e-6);
+                importantParameter.V1.value =0.99*(importantParameter.V1.value + 70*1e-6);
+                importantParameter.V0.value =0.99*(importantParameter.V0.value + 70*1e-6);
             end
             if strcmpi(testobject.label.literal,'gas cylinder')
                 importantParameter.V1.value =importantParameter.V1.value + 8*1e-6;
