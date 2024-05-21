@@ -1,13 +1,12 @@
-
 % code_230223_evaluate_heattransfer_FFT
 % Code that determines the complex Nusselt number in the frequency domain
 % from measurement data and  plot it afterwards
 %
 % created: Rexer 28.02.22
+% last changes: 20.05.24
 % Version: Disseration v1.0.1
-% New Datamodel
 
-%% clear
+%% clear workspace
 clc
 clearvars -except fig_Nu fig_NuPe fig_stiffness fig_stiffness_dimless fig_ReIm
 unc = @LinProp;
@@ -16,9 +15,10 @@ unc = @LinProp;
 
 % number of orders to bee evaluated (first order is neccesary)
 neval=1;
-
-%% Reading the measurement data
+current directory
 cd0=cd();
+%% Reading the measurement data
+
 try
     cd('C:\Users\rexer\OneDrive - stud.tu-darmstadt.de\Dissertation\Data')
     measureData = getMeasureData();
@@ -44,6 +44,7 @@ else
     fieldname.deflection=getSelectedFields(measureData,'Select defelction field');
 end
 deflection=extractMeasurements(measureData,fieldname.deflection{1});
+
 % pressure Data
 if isfield(measureData, 'pressure_gas')
     fieldname.pressure={'pressure_gas'};
@@ -51,6 +52,7 @@ else
     fieldname.pressure=getSelectedFields(measureData, 'select pressure:');
 end
 pressure=extractMeasurements(measureData,fieldname.pressure{1});
+
 % temperature Data
 if isfield(measureData, 'temperature_gas')
     fieldname.temperature={'temperature_gas'};
@@ -60,7 +62,8 @@ else
     fieldname.temperature=getSelectedFields(measureData, 'select temperature');
 end
 temperature=extractMeasurements(measureData,fieldname.temperature{1});
-% ambient temperature Data
+
+% ambient temperature data
 if isfield(measureData, 'temperature_ambient')
     fieldname.temperature_ambient={'temperature_ambient'};
 elseif isfield(measureData, 'ambient_temperature')
@@ -69,7 +72,8 @@ else
     fieldname.temperature_ambient=getSelectedFields(measureData, 'select ambient temperature ');
 end
 temperature_ambient=extractMeasurements(measureData,fieldname.temperature_ambient{1});
-% time vector
+
+% time data
 if isfield(measureData, 'measurement_TIME_VECTOR')
     fieldname.time={'measurement_TIME_VECTOR'};
 else
@@ -80,13 +84,15 @@ for ii=length(measureData):-1:1
     time(ii).name='time';
     time(ii).variable='t';
 end
-
+% extract sampletime
 sampletime = measureData(1).model_PARAMETERS.all_parameters_array(1).value;
+
 % Add volume in m³
 [volume,testSetup]=addVolumeData(deflection,pressure,testSetup);
 
 %% Evaluate measurement data
-% DFT of pressure and Volume
+% DFT of pressure and Volume including uncertainty propagation into
+% frequency domain
 for ii=length(measureData):-1:1
     excitationFrequency(ii) = measureData(ii).model_PARAMETERS.important_parameters_struct.excitation.frequency.value;
     % volume
@@ -99,7 +105,7 @@ for ii=length(measureData):-1:1
         'hysteresis',volume(ii).unc.hysteresis);
     volume(ii).FFT.value(1)=mean(volume(ii).value);
     % pressure
-   pressure(ii).FFT = propagateSysUncToFreqDomain...
+    pressure(ii).FFT = propagateSysUncToFreqDomain...
         (pressure(ii).value, time(ii).value, sampletime,...
         'excitation_frequency',excitationFrequency(ii), ...
         'bias', pressure(ii).unc.bias,...
@@ -132,7 +138,7 @@ for ii=length(pressure):-1:1
         if strcmpi(pressure(ii).sensor.prefix,'https://w3id.org/fst/resource//0184ebd9-988b-7bba-83a5-01cec15c9820')
             pressure(ii).FFT.value=pressure(ii).FFT.value.*exp(1i*2*pi*pressure(ii).FFT.frequencies*2e-3);
         end
-    % Adapt Accumulator Sensor Deadtime 1ms
+        % Adapt Accumulator Sensor Deadtime 1ms
     elseif strcmpi(testSetup(ii).testobject.label.literal,'hydraulic accumulator')
         if strcmpi(pressure(ii).sensor.prefix,'https://w3id.org/fst/resource//0184ebd9-988b-7bba-8310-d3fc5137ddf6')
             pressure(ii).FFT.value=pressure(ii).FFT.value.*exp(-1i*2*pi*pressure(ii).FFT.frequencies*1e-3);
@@ -140,8 +146,8 @@ for ii=length(pressure):-1:1
     end
 end
 
-% set Volume signal to zero phase dirfference and turn al other pointers
-% equivalent
+% set Volume signal to zero phase dirfference and turn all other pointers
+% equivalent only necessary for ploting data
 for ii=length(measureData):-1:1
     [~,closestind(ii)]=min(abs(volume(ii).FFT.frequencies-volume(ii).FFT.excitation_frequency));
 
@@ -165,7 +171,7 @@ temperature = getHarmonicWithUnc(temperature,excitationFrequency,neval);
 temperature_ambient = getHarmonicWithUnc(temperature_ambient,excitationFrequency,neval);
 
 % Determination of temperature from pressure and Volume Data
-[temperature_pv,mass,Nu_test] = getTempFFT(volume,pressure ,temperature_ambient , testSetup);
+[temperature_pv,mass] = getTempFFT(volume,pressure ,temperature_ambient , testSetup);
 % Determination of Heatflow from pressure and Volume Data
 heatflow = getHeatFFT(volume,pressure,temperature_ambient,testSetup);
 % Determination of Nuselt Number from Heatflow and Temperature Data
@@ -173,7 +179,7 @@ Nu = getNusseltFFT(heatflow,temperature,temperature_ambient,pressure,testSetup);
 Nu_pv = getNusseltFFT(heatflow,temperature_pv,temperature_ambient,pressure,testSetup);
 
 
-% Detrmination of nusselt angle
+% Some adaptions for plots
 for ii=length(Nu):-1:1
     % Determination of nusselt Number for each frequency // Sort for
     % plots
@@ -181,15 +187,9 @@ for ii=length(Nu):-1:1
         plotNu(jj).res(ii)=Nu(ii).FFT.metas(jj);
         plotNu_pv(jj).res(ii)=Nu_pv(ii).FFT.metas(jj);
     end
-    % Phase between Heatflux and Temperature for validation
-    %     angle(Nu_pv(ii).FFT.metas(1))
-    %     angle(heatflow(ii).FFT.harmonic.metas(2)/-temperature(ii).FFT.harmonic.metas(2))
-    Nu_angle(ii) = angle(heatflow(ii).FFT.harmonic.metas(2).Value)-angle(-temperature_pv(ii).FFT.harmonic.metas(2).Value);
-    if Nu_angle(ii)<0
-        Nu_angle(ii)=Nu_angle(ii)+2*pi;
-    end
 
     % Add Peclet number for comparison
+    % Pe = 2pif*c_p*rho/(lambda*(A/V)^2)
     Pe(ii)=2*pi*excitationFrequency(ii)*mass(ii).value*...
         getFluidProperty(testSetup(ii).fluid_ID,...
         mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'c_p')/...
@@ -198,10 +198,6 @@ for ii=length(Nu):-1:1
         mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'thermal_conductivity')* ...
         (testSetup(ii).Aw.value/testSetup(ii).V1.value)^2);
 end
-
-% Determine the slope of the first order of nusselt number
-[slope,offset]=polyfit(log10(excitationFrequency),log10(abs([plotNu_pv(1).res.Value])),1);
-disp("Steigung: " + num2str(slope(1))+ " Offset: "+ num2str(offset.normr))
 
 %% Analysing stiffness
 for ii=length(pressure):-1:1
@@ -212,25 +208,19 @@ for ii=length(pressure):-1:1
 
     V1=unc(testSetup(ii).V1.value,testSetup(ii).V1.accuracy);
     stiffness_dimless(ii) = stiffness(ii) * ...
-         volume(ii).FFT.harmonic.metas(1)/...
-         pressure(ii).FFT.harmonic.metas(1);
-   
+        volume(ii).FFT.harmonic.metas(1)/...
+        pressure(ii).FFT.harmonic.metas(1);
 
-    % Model with complex Nusselt number
 
+    % get isentropic exponent
     gamma(ii)=getFluidProperty(testSetup(ii).fluid_ID,...
         mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'isentropic_exponent');
-    %     lambda = unc(getFluidProperty(testSetup(ii).fluid_ID,...
-    %         mean(pressure(ii).value)*1e5,mean(temperature_ambient(ii).value)+273.15,'thermal_conductivity'));
-    %     Aw = unc(testSetup(ii).Aw.value,testSetup(ii).Aw.accuracy);
-    %     s = Aw/V1;
-    %     m=mass(ii).metas;
-    %     R=296;
 
-    Nusselt_theory(ii)=1*Pe(ii)^(0.5)+3  +1i*1*Pe(ii)^(0.5);
-    Nusselt_fit(ii)=0.018*Pe(ii)^(1.15)+2.1826  +1i*0.658*Pe(ii)^(0.8322);
-    stiffness_dimless_theory(ii)=(1i*gamma(ii)*Nusselt_theory(ii)/Pe(ii)-gamma(ii))/...
-        (1i*gamma(ii)*Nusselt_theory(ii)/Pe(ii)-1);
+    % Models with complex Nusselt number
+    Nusselt_Lee(ii)=sqrt(Pe(ii)/2).*((1+1i).*tanh(((1+1i).*sqrt(Pe(ii)/2))))./(1-tanh(((1+1i).*sqrt(Pe(ii)/2)))./((1+1i).*sqrt(Pe(ii)/2)));
+    Nusselt_fit(ii)=5.3221+1.1829*Pe(ii).^(0.5)+3.4594e-5*Pe(ii).^(1.8) + 1i*0.23197*Pe(ii).^(0.87616);
+    stiffness_dimless_Lee(ii)=(1i*gamma(ii)*Nusselt_Lee(ii)/Pe(ii)-gamma(ii))/...
+        (1i*gamma(ii)*Nusselt_Lee(ii)/Pe(ii)-1);
     stiffness_dimless_fit(ii)=(1i*gamma(ii)*Nusselt_fit(ii)/Pe(ii)-gamma(ii))/...
         (1i*gamma(ii)*Nusselt_fit(ii)/Pe(ii)-1);
     stiffness_dimless_Pelz(ii)=(1i*gamma(ii)*3/Pe(ii)-gamma(ii))/...
@@ -238,9 +228,12 @@ for ii=length(pressure):-1:1
 end
 clear ii
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Plots
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Nusselt Plots
-switch testSetup(2).testobject.prefix    
+% get test stetups for marker settings
+switch testSetup(2).testobject.prefix
     case 'https://w3id.org/fst/resource//018bfcec-5049-7d0d-8ff2-9c53de333a8b'
         %accumulator 1,3l
         plotopts={'o','Markersize',5};
@@ -265,6 +258,11 @@ switch testSetup(2).testobject.prefix
         plotopts={'-'};
 end
 
+
+%% Nusselt Plots
+% Plot Nusselt Number in Bode Plots depending on frequency
+
+% initiate figure
 if exist ('fig_Nu', 'var')
     if isempty(fig_Nu.findobj)
         fig_Nu=figure('name','Nu(f)');
@@ -272,10 +270,10 @@ if exist ('fig_Nu', 'var')
 else
     fig_Nu=figure('name','Nu(f)');
 end
-% publishfig
+
+% plot selected runs
 for jj =selectedruns.runs
-    for ii=1%1:length(plotNu)
-        %         fig_Nu = plotFreqResp(excitationFrequency,plotNu(ii).res,fig_Nu,'plottype','loglog','ylabel','Nusselt','phase',true);
+    for ii=1
         fig_Nu = plotFreqResp(excitationFrequency(runs(jj).ind),plotNu_pv(ii).res(runs(jj).ind),fig_Nu,...
             'plottype','loglog', ...
             'ylabel','Nusselt', ...
@@ -285,6 +283,9 @@ for jj =selectedruns.runs
 end
 setfigpos(12.5,11.5,'m')
 
+
+% Plot Nusselt Number in Bode Plots depending on Peclet number
+% initiate figure
 if exist('fig_NuPe', 'var')
     if isempty(fig_NuPe.findobj)
         fig_NuPe=figure('name','Nu(Pe)');
@@ -292,11 +293,9 @@ if exist('fig_NuPe', 'var')
 else
     fig_NuPe=figure('name','Nu(Pe)');
 end
-% publishfig
-% fig_NuPe = plotFreqResp(Pe,[Nu_test.test],fig_NuPe,'plottype','loglog','ylabel','Nusselt','xlabel','Pe','phase',true);
+% plot selected runs
 for jj =selectedruns.runs
-    for ii=1%1:length(plotNu)
-        %     fig_NuPe = plotFreqResp(Pe,plotNu(ii).res,fig_NuPe,'plottype','loglog','ylabel','Nusselt','xlabel','Pe','phase',true);
+    for ii=1
         fig_NuPe = plotFreqResp(Pe(runs(jj).ind),plotNu_pv(ii).res(runs(jj).ind),fig_NuPe, ...
             'plottype','loglog', ...
             'ylabel','Nusselt', ...
@@ -307,8 +306,9 @@ for jj =selectedruns.runs
     end
 end
 setfigpos(12.5,11.5,'m')
-% figure('name','Phase Q/T')
-% semilogx(Pe,rad2deg(Nu_angle))
+
+% Plot Nusselt Number in real and imaginary part depending on peclet number
+% initiate figure
 if exist('fig_ReIm', 'var')
     if isempty(fig_ReIm.findobj)
         fig_ReIm=figure('name','Real- and imag Part of Nusseltnumber');
@@ -320,9 +320,11 @@ else
     tiledlayout(1,2,"Padding","tight","TileSpacing","tight")
     publishfig
 end
+
+% plot selected runs
 for jj =selectedruns.runs
     figure(fig_ReIm)
-    
+
     ax1=nexttile(1);
     plot(Pe(runs(jj).ind),real([plotNu_pv(1).res(runs(jj).ind)]))
     box off
@@ -342,20 +344,15 @@ xlabel('Pe')
 ylabel('Im(Nu)')
 
 
-%Comparison to Hartig
-
-load MeanOscillatingPecletNumber4mm120bar40bar0_7L.mat
-Pe120bar4mm = k;
-load NusseltFit4mm120bar40bar0_7L.mat
-Nu120bar4mm = resultsFitKornhauser;
-
-% [fig_NuPe] = plotFreqResp([Pe120bar4mm],[Nu120bar4mm.complexNu],fig_NuPe,'plottype','loglog','phase',true);
 
 
 %% FFT Plots
+% if you want to plot type true instead of false
 if false
+    % maginute volume
+    % initiate figrue
     figure('Name','volume abs');
-
+    % plots
     stem(volume(end).FFT.frequencies(1:end/2),abs(volume(end).FFT.value(1:end/2)),'Marker','none')
     hold on
     plot(volume(end).FFT.frequencies(1:end/2),abs(volume(end).FFT.value(1:end/2)),"o",'MarkerFaceColor','white','MarkerEdgeColor','black','MarkerSize',4)
@@ -367,9 +364,10 @@ if false
     setfigpos(6.9,6.9,'m')
     publishfig
 
-
+    % maginute pressure
+    % initiate figrue
     figure('Name','pressure abs');
-
+    % plots
     stem(pressure(end).FFT.frequencies(1:end/2),abs(pressure(end).FFT.value(1:end/2)),'Marker','none')
     hold on
     plot(pressure(end).FFT.frequencies(1:end/2),abs(pressure(end).FFT.value(1:end/2)),"o",'MarkerFaceColor','white','MarkerEdgeColor','black','MarkerSize',4)
@@ -377,54 +375,31 @@ if false
     ylabel('MAGNITUDE DRUCK')
     xlabel('FREQUENZ')
     xlim([0,500])
-set(gca,'YScale', 'log')
+    set(gca,'YScale', 'log')
     setfigpos(6.9,6.9,'m')
     publishfig
-
-        figure('Name','nonlinearity');
-
-    stem(pressure(end).FFT.frequencies(1:end/2), ...
-        abs(pressure(end).FFT.value(1:end/2))./abs(volume(end).FFT.value(1:end/2)), ...
-        'Marker','none')
-    hold on
-    plot(pressure(end).FFT.frequencies(1:end/2), ...
-        abs(pressure(end).FFT.value(1:end/2))./abs(volume(end).FFT.value(1:end/2)), ...
-        "o",'MarkerFaceColor','white','MarkerEdgeColor','black','MarkerSize',4)
-    box off
-    ylabel('MAGNITUDE DRUCK')
-    xlabel('FREQUENZ')
-    xlim([0,500])
-
-    setfigpos(6.9,6.9,'m')
-    publishfig
-
-
 end
 
-%% Unsicherheitsplots
+%% Uncertainty Plots
+% if you want to plot type true instead of false
 if false
+    % staced uncertainty plots of pressure
     fig_unc_pressure=figure('name','Uncertainty Pressure');
     fig_unc_pressure=plotUncFFTStacked(pressure(runs(jj).ind),fig_unc_pressure)
     publishfig
     setfigpos(13.7,6.9,'m')
-
+    % staced uncertatinty plot of volume
     fig_unc_volume=figure('name','Uncertainty volume');
     fig_unc_volume=plotUncFFTStacked(volume(runs(jj).ind),fig_unc_volume)
     publishfig
     setfigpos(13.7,6.9,'m')
-
-
-
-nexttile(2)
-% ylim([0,6])
-% nexttile(1)
-% ylim([0,0.12])
-% nexttile(1)
-% ylim([0,2.5e-8])
-
 end
 
+%% Analyzing all uncertatinty of all runs of pressure and volume signal
+% if you want to plot type true instead of false
 if false
+    % Volume
+    % initiate figure
     figure('Name','volume abs');
     tiledlayout("flow","TileSpacing","compact")
     for ii=length(volume):-1:1
@@ -448,7 +423,8 @@ if false
         box off
         ylim([-pi/2,pi/2])
     end
-
+    % pressure
+    % initiate figure
     figure('Name','pressure phase')
     tiledlayout("flow","TileSpacing","compact")
     for ii=length(pressure):-1:1
@@ -458,27 +434,13 @@ if false
         hold on
         errorbar(pressure(ii).FFT.harmonic.frequencies,phase(pressure(ii).FFT.harmonic.metas.Value),phase(pressure(ii).FFT.harmonic.metas.StdUnc),'LineStyle','none')
         box off
-        %         ylim([0,5])
+        % ylim([0,5])
     end
-
-    figure('Name','pressure phase')
-    tiledlayout("flow","TileSpacing","compact")
-    for ii=length(pressure):-1:1
-        nexttile
-
-        stem(pressure(ii).FFT.frequencies,phase(pressure(ii).FFT.value))
-        %         hold on
-        %         errorbar(pressure(ii).FFT.frequencies,phase(pressure(ii).FFT.value),phase(pressure(ii).FFT.harmonic.metas.StdUnc),'LineStyle','none')
-        box off
-        %
-    end
-
 
     figure('Name','pressure abs')
     tiledlayout("flow","TileSpacing","compact")
     for ii=length(pressure):-1:1
         nexttile
-
         stem(pressure(ii).FFT.harmonic.frequencies,abs(pressure(ii).FFT.harmonic.metas.Value))
         hold on
         errorbar(pressure(ii).FFT.harmonic.frequencies,abs(pressure(ii).FFT.harmonic.metas.Value),abs(pressure(ii).FFT.harmonic.metas.StdUnc),'LineStyle','none')
@@ -489,7 +451,8 @@ if false
 end
 
 
-%% Steifigkeitsplots
+%% Stiffness Plots
+%plot abolute stiffness in bode plot depending on frequency
 for jj =selectedruns.runs
     try
         fig_stiffness = plotFreqResp(excitationFrequency(runs(jj).ind),stiffness(runs(jj).ind),fig_stiffness, ...
@@ -507,6 +470,9 @@ for jj =selectedruns.runs
     end
 end
 setfigpos(12.5,11.5,'m')
+
+%plot dimensionless stiffness in bode plot depending on Peclet number
+% inclunding models from Lee Pelz and Rexer
 for jj =selectedruns.runs
     try
         fig_stiffness_dimless = plotFreqResp(Pe(runs(jj).ind),stiffness_dimless(runs(jj).ind),fig_stiffness_dimless, ...
@@ -525,51 +491,10 @@ for jj =selectedruns.runs
             'plotOpts',plotopts);
     end
     fig_stiffness_dimless = plotFreqResp(Pe(runs(jj).ind),stiffness_dimless_fit(runs(jj).ind),fig_stiffness_dimless,'plotOpts',{'-'},'plottype','absolute','ylabel','STEIFIGKEIT K^+','phase',true);
-    fig_stiffness_dimless = plotFreqResp(Pe(runs(jj).ind),stiffness_dimless_theory(runs(jj).ind),fig_stiffness_dimless,'plotOpts',{'-'},'plottype','absolute','ylabel','STEIFIGKEIT K^+','phase',true);
+    fig_stiffness_dimless = plotFreqResp(Pe(runs(jj).ind),stiffness_dimless_Lee(runs(jj).ind),fig_stiffness_dimless,'plotOpts',{'-'},'plottype','absolute','ylabel','STEIFIGKEIT K^+','phase',true);
     fig_stiffness_dimless = plotFreqResp(Pe(runs(jj).ind),stiffness_dimless_Pelz(runs(jj).ind),fig_stiffness_dimless,'plotOpts',{'-'},'plottype','absolute','ylabel','STEIFIGKEIT K^+','phase',true);
 end
 setfigpos(12.5,11.5,'m')
-%% Test
-
-% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'c_v')
-% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'c_p')
-% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'thermal_conductivity')
-% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'specific_gas_constant')
-% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'isentropic_exponent')
-if false
-for ii=1:length(measureData)
-pmean(ii)=mean(pressure(ii).value);
-pFFT0(ii)=pressure(ii).FFT.value(1);
-end
-figure("Name",'pmean Test')
-plot(excitationFrequency,pmean,excitationFrequency,pFFT0)
-publishfig
-end
-%% Mapp data for Plotserializer
-if false
-    for ii=length(measureData):-1:1
-        measID{ii}=[measureData(ii).METADATA.measurement_UUID];
-    end
-    % Nusselt-Numbers
-
-    ser_Nu=table(Pe',plotNu_pv(1).res.Value',plotNu_pv(1).res.StdUnc',cellstr(measID'));
-
-    ser_Nu.Properties.VariableNames(1)={'Pe'}
-    ser_Nu.Properties.VariableNames(2)={'Nu'}
-    ser_Nu.Properties.VariableNames(3)={'Nu_StdUnc'}
-    ser_Nu.Properties.VariableNames(4)={'Measurement_UUID'}
-
-    % ser_Nu.Properties.VariableUnits(1)={'unit:UNITLESS'}
-    % ser_Nu.Properties.VariableUnits(2)={'unit:UNITLESS'}
-    % ser_Nu.Properties.VariableUnits(3)={'unit:UNITLESS'}
-    % ser_Nu.Properties.VariableDescriptions(1)={'Peclet-Number'}
-    % ser_Nu.Properties.VariableDescriptions(2)={'Nusselt-Number'}
-    % ser_Nu.Properties.VariableDescriptions(3)={'95% uncertatinty of Nusselt-Number'}
-
-    writetable(ser_Nu,'Nusselt_Serializer.csv')
-end
-
-
 %% Arange and save Data
 for ii=length(measureData):-1:1
     % get measurement IDs
@@ -582,10 +507,7 @@ for ii=length(measureData):-1:1
 end
 
 for jj=length(runs):-1:1
-
-
     % get Run name
-
     exp=table( excitationFrequency(runs(jj).ind).',...
         Pe(runs(jj).ind).',...
         plotNu_pv(1).res.Value(runs(jj).ind).', ...
@@ -598,7 +520,7 @@ for jj=length(runs):-1:1
         gamma(runs(jj).ind).');
 
     exp = addprop(exp,{'TestObject','zAmp','p0','p1','Ta'}, ...
-              {'table','table','table','table','table'});
+        {'table','table','table','table','table'});
 
     exp.Properties.VariableNames(1)={'f0'};
     exp.Properties.VariableDescriptions(1)={'Ecxitation Frequency'};
@@ -628,7 +550,7 @@ for jj=length(runs):-1:1
     exp.Properties.VariableNames(10)={'gamma'};
     exp.Properties.VariableDescriptions(10)={'Isentropic Exponent'};
     exp.Properties.VariableUnits(10)={'UNITLESS'};
-    
+
     exp.Properties.CustomProperties.TestObject = testObj;
     exp.Properties.CustomProperties.zAmp = runs(jj).amplitude;
     exp.Properties.CustomProperties.Ta = runs(jj).temperature;
@@ -645,22 +567,4 @@ for jj=length(runs):-1:1
     save(['test_data\Results\',exp.Properties.Description,'.mat'],'exp')
 
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-% 
-% getFluidProperty(testSetup(ii).fluid_ID,140e5,293, ...
-%     'isentropic_exponent')
-% getFluidProperty(testSetup(ii).fluid_ID,1e5,293, ...
-%     'isentropic_exponent')
 

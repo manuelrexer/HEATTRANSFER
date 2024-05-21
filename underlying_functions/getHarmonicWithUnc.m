@@ -1,7 +1,11 @@
 function [datastr] = getHarmonicWithUnc(datastr,excitationFrequency,neval)
 % getHarmonic extracts from a frequency vector the harmonics of
 % 0,omega,...,n*omega
-%   Version 1.1 Manuel Rexer 10.03.2024
+%
+% created by Manuel Rexer 10.03.2024
+% Last adaption: 21.05.2024
+
+%% clculation
 unc=@LinProp;
 for ii=length(datastr):-1:1
     % determine harmonics
@@ -9,16 +13,17 @@ for ii=length(datastr):-1:1
         datastr(ii).FFT.value,...
         datastr(ii).FFT.frequencies,...
         excitationFrequency(ii),neval);
-    
+    % get uncertatinty values
     [uncvalues,~]=getHarmonic(...
         datastr(ii).FFT.uncertainty.complex,...
         datastr(ii).FFT.frequencies,...
         excitationFrequency(ii),neval);
-
+    % get magnitude values
     [uncmag,~]=getHarmonic(...
         datastr(ii).FFT.uncertainty.absolute,...
         datastr(ii).FFT.frequencies,...
         excitationFrequency(ii),neval);
+    % get phase values
     [uncphase,~]=getHarmonic(...
         datastr(ii).FFT.uncertainty.phase,...
         datastr(ii).FFT.frequencies,...
@@ -31,18 +36,12 @@ for ii=length(datastr):-1:1
     datastr(ii).FFT.harmonic.uncertainty.phase=uncphase;
     % determine uncertaintyvalues
     % all frequencies
+    % Propagate frequency
     for jj=length(values):-1:1
-        %         datastr(ii).FFT.harmonic.metas(jj) = unc(complex(values(jj)),...
-        %             diag([real(uncvalues(jj))^2,imag(uncvalues(jj))^2]));
         mag=unc(abs(values(jj)),uncmag(jj));
         pha=unc(phase(values(jj)),uncphase(jj));
         datastr(ii).FFT.harmonic.metas(jj) = mag*cos(pha)+1i*mag*sin(pha);
     end
-    % adapt omega=0
-    % TODO
-
-    % pressure(ii).FFT.harmonic.metas(1)=
-
+    % TODO:adapt omega=0
 end
-
 end

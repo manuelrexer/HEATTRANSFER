@@ -1,7 +1,12 @@
 function setupParameter=getTestrigParameter(measureData)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
-
+%getTestrigParameter extracts testri matadata and gets relevant parameters
+%from the information models
+% Input:
+%   mearsureData: Stuctarray of measure Data
+% Output:
+% setupParameter: Structarray of Test setup parameters
+%   Author: Rexer
+%   Last edit. 20.05.2024
 
 for ii=length(measureData):-1:1
     testobject_ID={};
@@ -30,9 +35,8 @@ for ii=length(measureData):-1:1
     else
         error('There are more then one objects of interests. This is not implemented yet.')
     end
-    % if we use the accumulator testrig
+    % if we use the accumulator testrig it is a little different
     if acc_setup
-        %         testrig_ID='https://w3id.org/fst/resource/018bb4b1-db4a-7bbd-a299-ee3b49b5d7f5';
         testrig_ID=measureData(ii).METADATA.hardware.(hardwaresetup{acctestrig_IND}).p_ID;
         [temp1, temp2] = retrieveRDFDataset(testrig_ID, 'config_json_file_path', "C:\Users\rexer\Documents\MATLAB\heattransfer\fst-rdf-utilities\EXAMPLE.config.json");
         testrig=temp2.(temp1);
@@ -87,7 +91,7 @@ for ii=length(measureData):-1:1
         
     end
 
-
+% data mapping
     f = fieldnames(importantParameter);
     for jj = 1:length(f)
         setupParameter(ii).(f{jj}) = importantParameter.(f{jj});

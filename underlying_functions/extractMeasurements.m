@@ -1,7 +1,13 @@
 function [dataStruct] = extractMeasurements(measureData,dataField)
-%UNTITLED7 Summary of this function goes here
-%   Detailed explanation goes here
+%extractMeasurements(measureData,dataField) Extracts uncertatinty 
+% information form Sensors IRI and adds them to dataStruct 
+% 
+%   created by Manuel Rexer 03.2024
+%   last adation 21.05.2024
+
+
 for ii=length(measureData):-1:1
+    % define run
     run=measureData(ii).(dataField);
     % collect measured data and their metadata
     data.quantity = run.physical_quantity_name;
@@ -16,13 +22,11 @@ for ii=length(measureData):-1:1
     clear temp1 temp2
     data.sensor=sensor;
 
-
     % extract uncertainty values
     data.unc.bias = getUncValues(data,sensor,'Bias.hasProperty.BiasUncertainty',run);
     data.unc.sensitivity =getUncValues(data,sensor,'Sensitivity.hasProperty.SensitivityUncertainty',run);
     data.unc.linearity = getUncValues(data,sensor,'LinearityUncertainty',run);
     data.unc.hysteresis = getUncValues(data,sensor,'HysteresisUncertainty',run);
-
 
     % map data
     dataStruct(ii)=data;
@@ -43,7 +47,6 @@ try
                 ['hasSystemCapability.SensorCapability.hasProperty.',uncfield,'.unit'])),data.unit))
             warning('Units of uncertatnity Value and Measured Values are not machting!!!')
         end
-
 
         % check if the systematic uncertainty is a sensitivity uncertatinty
         % and if the value only depend on the Measurement value (MV)

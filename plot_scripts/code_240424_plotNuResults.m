@@ -1,9 +1,14 @@
+% Code that plots  measured Nusselt numbers
+%
+% created: Rexer 01.05.2024
+% last changes: 20.05.24
 
-
-
+%% Initiation
 clear
 cd0=cd();
 unc=@LinProp;
+
+%% Load Data
 try
     [filenames, dataPath, ~] = uigetfile( ...
         '.mat', 'Select MAT-files (*.mat)', ...
@@ -28,11 +33,8 @@ catch e
     e.rethrow
 end
 
-
-
-
 %% Plot
-
+% initiate figure
 if exist('fig_NuPe', 'var')
     if isempty(fig_NuPe.findobj)
         fig_NuPe=figure('name','Nu(Pe)');
@@ -40,8 +42,7 @@ if exist('fig_NuPe', 'var')
 else
     fig_NuPe=figure('name','Nu(Pe)');
 end
-% publishfig
-% fig_NuPe = plotFreqResp(Pe,[Nu_test.test],fig_NuPe,'plottype','loglog','ylabel','Nusselt','xlabel','Pe','phase',true);
+% get marker information
 for ii = length(res):-1:1
     switch res{ii}.exp.Properties.CustomProperties.TestObject
         case 'Accumulator_1.3l'
@@ -62,10 +63,12 @@ for ii = length(res):-1:1
         otherwise
             plotopts={'-'};
     end
+    % generate uncertainty array
     for jj=length(res{ii}.exp.Nu_StdUnc):-1:1
     res{ii}.exp.Nu_metas(jj)=unc(res{ii}.exp.Nu(jj), ...
         diag([real(res{ii}.exp.Nu_StdUnc(jj)).^2,imag(res{ii}.exp.Nu_StdUnc(jj)).^2]));
     end
+    % plot
     fig_NuPe = plotFreqResp( ...
         res{ii}.exp.Pe,res{ii}.exp.Nu_metas, ...
         fig_NuPe, ...
@@ -77,7 +80,8 @@ for ii = length(res):-1:1
         'phase',true, ...
         'plotOpts',plotopts);
 
-
+    % Plot real and imaginary part
+% initiate figure
 if exist('fig_ReIm', 'var')
     if isempty(fig_ReIm.findobj)
         fig_ReIm=figure('name','Real- and imag Part of Nusseltnumber');
@@ -89,7 +93,7 @@ else
     tiledlayout(1,2,'TileSpacing','tight','Padding','tight')
     publishfig
 end
-
+% plot
     figure(fig_ReIm)
     
     ax1=nexttile(1);
@@ -116,6 +120,7 @@ end
     decades_equal(gca,[1e0,1e5],[1e-1,1e4])
 
 % Plot Real and Imaginary Part with errorbars
+% initiate figure
 if exist('fig_ReIm_Unc', 'var')
     if isempty(fig_ReIm_Unc.findobj)
         fig_ReIm_Unc=figure('name','Real- and imag Part of Nusseltnumber');
@@ -128,6 +133,7 @@ else
     publishfig
 end
 clear ynegReal yposReal ynegImag yposImag
+% plot
 for jj=length(res{ii}.exp.Nu):-1:1
         if real(res{ii}.exp.Nu(jj))-real(res{ii}.exp.Nu_StdUnc(jj))<0.01
             ynegReal(jj)=real(res{ii}.exp.Nu(jj))-0.01;
@@ -172,9 +178,11 @@ end
 figure(fig_ReIm)
 setfigpos(13.7,6.9,'m')
 
+%% Generate Models
+% Peclet number
 Pe= logspace(-3,5,100);
 
-% Lee
+% Lee model
 z=(1+1i).*sqrt(Pe/2);
 Nu.Lee=sqrt(Pe/2).*((1+1i).*tanh(z))./(1-tanh(z)./z);
 
@@ -196,9 +204,7 @@ for ii=1:length(fnames)
     hold on
     box off
 end
-
-
-
+% resize figure
 figure(fig_NuPe)
 setfigpos(12.5,10.3,'m')
 T=fig_NuPe.Children;

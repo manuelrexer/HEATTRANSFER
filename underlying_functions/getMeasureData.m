@@ -1,6 +1,5 @@
 function [measureData] = getMeasureData(varargin)
-
-% Read in measurement data. If path does not exist, instead
+%Read in measurement data. If path does not exist, instead
 % directly from the folder.
 %
 %   INPUT   filepaths: Path of measurement Data (optinal) cell array

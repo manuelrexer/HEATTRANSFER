@@ -1,6 +1,6 @@
 function selectedruns = selectRuns(runs)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+%selectRuns select run to evaluate form all runs using list prompt
+
 message='Select runs';
 [indx,~] = listdlg('PromptString',message,'ListString',{runs(:).name});
 

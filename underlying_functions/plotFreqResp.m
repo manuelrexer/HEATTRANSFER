@@ -1,4 +1,16 @@
 function [fig] = plotFreqResp(vFreqs,vH,fig,varargin)
+% plots frequency response in a figure object
+% author: Manuel Rexer
+% last adaption: 21.05.24
+%
+% inputs:
+% vFreqs: frequency array
+% vH: complex value array also pasible as Metas array to plot uncertainty
+% fig: figure object
+% varargin: Plot options
+%
+% Outputs:
+% fig: figure object
 
 %% Input adaption
 p = inputParser;
@@ -43,9 +55,8 @@ if plotphase
     rows=rows+1;
 end
 
-%% Frequenzgang plotten
-
-
+%% plot frequencies
+% initiate figure
 figure(fig)
 ch=get(fig,'Children');
 createTiles=true;
@@ -60,6 +71,7 @@ end
 ax=nexttile(1);
 hold on
 box off
+% plot
 if metas
     errorbar(vFreqs, abs(vH.Value), yneg ,  ypos,plotOpts{:},'MarkerFaceColor','white')
 else
@@ -68,7 +80,7 @@ end
 hold on
 box off
 ax.XScale='log';
-
+% rescale
 switch type
     case 'loglog'
         ax.YScale='log';
@@ -76,12 +88,11 @@ switch type
             decades_equal(gca)
         end
 end
-
+% labels
 ylabel(yLabel)
 if ~plotphase
     xlabel(fLabel)
 end
-
 publishfig
 
 
@@ -98,27 +109,16 @@ elseif ~isempty(ylimits)
     ylim(ylimits)
 end
 
+% plot phase if needed
 if plotphase
     ax2=nexttile(2);
     hold on
     box off
     if metas
         deg=rad2deg(angle(vH.Value));
-
-%         if any(deg<=0)
-%             deg=deg+360;
-%         end
         errorbar(vFreqs, deg, rad2deg(angle(vH.StdUnc)),plotOpts{:},'MarkerFaceColor','white')
     else
         deg=rad2deg(angle(vH));
-%         if any(deg<=0)
-%             deg=deg+360;
-%         end
-        %         for ii=1:length(deg)
-        %             if deg(ii)<=0
-        %                 deg(ii)=deg(ii)+360;
-        %             end
-        %         end
         plot(vFreqs, deg,plotOpts{:},'MarkerFaceColor','white')
     end
     hold on
