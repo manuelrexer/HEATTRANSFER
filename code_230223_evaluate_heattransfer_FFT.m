@@ -12,13 +12,11 @@ clearvars -except fig_Nu fig_NuPe fig_stiffness fig_stiffness_dimless fig_ReIm
 unc = @LinProp;
 
 %% Options and Preperation
-
 % number of orders to bee evaluated (first order is neccesary)
 neval=1;
-current directory
+% current directory
 cd0=cd();
 %% Reading the measurement data
-
 try
     cd('C:\Users\rexer\OneDrive - stud.tu-darmstadt.de\Dissertation\Data')
     measureData = getMeasureData();
@@ -26,7 +24,6 @@ try
 catch
     cd(cd0)
 end
-
 % select a run from the Dataset
 runs=getMeasurementRuns(measureData);
 selectedruns=selectRuns(runs);
