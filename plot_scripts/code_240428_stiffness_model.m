@@ -130,3 +130,38 @@ if false
     set(gca,'XScale','log')
 
 end
+
+%% Save serialized Data
+if false
+    
+    % combine variables and chose the relevant one
+    t=table();
+    for ii=1:length(res)
+        t=[t;res{ii}.exp(:, contains(res{ii}.exp.Properties.VariableNames, {'K+','Pe','UUID'}))];
+    end
+    
+    % add description
+    t.Properties.Description='Serialization of Figure of dimensionless Stiffness';
+    % select path
+    path=uigetdir('C:\Users\rexer\OneDrive - stud.tu-darmstadt.de\Dissertation\Serializer\metadata-serializer');
+    % generate files for serializer
+    generateSerializerInput(t,path)
+
+end
+
+if false
+    
+    % combine variables and chose the relevant one
+    t=table();
+    for ii=1:length(res)
+        t=[t;res{ii}.exp(:, contains(res{ii}.exp.Properties.VariableNames, {'K','f','UUID'}))];
+    end
+    t=removevars(t,{'K_metas','K+','K+_StdUnc'});
+    % add description
+    t.Properties.Description='Serialization of figure of gas accumulator stiffness';
+    % select path
+    path=uigetdir('C:\Users\rexer\OneDrive - stud.tu-darmstadt.de\Dissertation\Serializer\metadata-serializer');
+    % generate files for serializer
+    generateSerializerInput(t,path)
+
+end

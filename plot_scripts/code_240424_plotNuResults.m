@@ -211,3 +211,21 @@ T=fig_NuPe.Children;
 T=T(3);
 T.Padding='tight';
 T.TileSpacing='compact';
+
+%% Save serialized Data
+if false
+    
+    % combine variables and chose the relevant one
+    t=table();
+    for ii=1:length(res)
+        t=[t;res{ii}.exp(:, contains(res{ii}.exp.Properties.VariableNames, {'Nu','Pe','UUID'}))];
+    end
+    t=removevars(t,{'Nu_metas'});
+    % add description
+    t.Properties.Description='Serialization of Figure of Nusselt numbers';
+    % select path
+    path=uigetdir('C:\Users\rexer\OneDrive - stud.tu-darmstadt.de\Dissertation\Serializer\metadata-serializer');
+    % generate files for serializer
+    generateSerializerInput(t,path)
+
+end

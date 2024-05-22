@@ -454,7 +454,7 @@ for jj =selectedruns.runs
     try
         fig_stiffness = plotFreqResp(excitationFrequency(runs(jj).ind),stiffness(runs(jj).ind),fig_stiffness, ...
             'plottype','absolute', ...
-            'ylabel','STEIFIGKEIT in bar/l', ...
+            'ylabel','STEIFIGKEIT in bar/m3', ...
             'phase',true, ...
             'plotOpts',plotopts);
     catch
@@ -529,19 +529,19 @@ for jj=length(runs):-1:1
     exp.Properties.VariableDescriptions(3)={'Nusselt Number'};
     exp.Properties.VariableUnits(3)={'UNITLESS'};
     exp.Properties.VariableNames(4)={'Nu_StdUnc'};
-    exp.Properties.VariableDescriptions(4)={'95% uncertainty of the Nusselt number'};
+    exp.Properties.VariableDescriptions(4)={'95-percent uncertainty of the Nusselt number'};
     exp.Properties.VariableUnits(4)={'UNITLESS'};
     exp.Properties.VariableNames(5)={'K'};
     exp.Properties.VariableDescriptions(5)={'Stiffness'};
     exp.Properties.VariableUnits(5)={'BAR-PER-M3'};
     exp.Properties.VariableNames(6)={'K_StdUnc'};
-    exp.Properties.VariableDescriptions(6)={'95% uncertainty of the Stiffness'};
+    exp.Properties.VariableDescriptions(6)={'95-percent uncertainty of the Stiffness'};
     exp.Properties.VariableUnits(6)={'BAR-PER-M3'};
     exp.Properties.VariableNames(7)={'K+'};
     exp.Properties.VariableDescriptions(7)={'Dimensionless Stiffness'};
     exp.Properties.VariableUnits(7)={'UNITLESS'};
     exp.Properties.VariableNames(8)={'K+_StdUnc'};
-    exp.Properties.VariableDescriptions(8)={'95% uncertainty of the Dimensionless Stiffness'};
+    exp.Properties.VariableDescriptions(8)={'95-percent uncertainty of the Dimensionless Stiffness'};
     exp.Properties.VariableUnits(8)={'UNITLESS'};
     exp.Properties.VariableNames(9)={'Measurement_UUID'};
     exp.Properties.VariableNames(10)={'gamma'};
