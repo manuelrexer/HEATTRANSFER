@@ -37,7 +37,7 @@ for ii=1:length(fnames)
 end
 
 % add Measurements from Hartig
-if true
+if false
     load MeanOscillatingPecletNumber4mm120bar40bar0_7L.mat
     Pe120bar4mm = k;
     load NusseltFit4mm120bar40bar0_7L.mat
