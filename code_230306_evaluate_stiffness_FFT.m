@@ -1,11 +1,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% code_230223_evaluate_heattransfer_FFT
-% Code that determines the complex Nusselt number in the frequency domain
-% from measurement data and  plot it afterwards
+% code_230223_evaluate_stiffness_FFT
+% Code that determines the complex siffness of hydraulic accumulator
+% in the frequency domain from measurement data and  plot it afterwards.
 %
 % created: Rexer 28.02.22
 % Version: Disseration v1.0.1
-% New Datamodel
+
 
 %% clear
 clc
@@ -135,8 +135,6 @@ clear ii
 
 %% Plots
 % Plot Options
-
-
 try
     fig_stiffness = plotFreqResp(excitationFrequency,stiffness,fig_stiffness,'plottype','absolute','ylabel','STEIFIGKEIT in bar/l');
 catch
@@ -151,14 +149,3 @@ catch
     fig_stiffness_dimless = plotFreqResp(excitationFrequency,stiffness_dimless,fig_stiffness_dimless,'plottype','absolute');
 end
 publishfig
-% figure(1)
-% errorbar(volume(1).DFT.FFT.frequencies,abs(volume(1).DFT.FFT.value),volume(1).DFT.FFT.uncertainty.absolute,'.')
-% figure(2)
-% errorbar(volume(1).DFT.FFT.frequencies,angle(volume(1).DFT.FFT.value),volume(1).DFT.FFT.uncertainty.phase,'.')
-
-
-% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'c_v')
-% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'c_p')
-% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'thermal_conductivity')
-% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',1e5,293,'specific_gas_constant')
-% getFluidProperty('https://w3id.org/fst/resource/018dba9b-f067-7d3e-8a4d-d60cebd70a8a',40e5,293,'isentropic_exponent')
