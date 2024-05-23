@@ -18,7 +18,7 @@ neval=1;
 cd0=cd();
 %% Reading the measurement data
 try
-    cd('C:\Users\rexer\OneDrive - stud.tu-darmstadt.de\Dissertation\Data')
+    cd()
     measureData = getMeasureData();
     cd(cd0)
 catch
@@ -523,7 +523,7 @@ for jj=length(runs):-1:1
     exp.Properties.VariableDescriptions(1)={'Ecxitation Frequency'};
     exp.Properties.VariableUnits(1)={'HZ'};
     exp.Properties.VariableNames(2)={'Pe'};
-    exp.Properties.VariableDescriptions(2)={'Peclét Number'};
+    exp.Properties.VariableDescriptions(2)={'Péclet Number'};
     exp.Properties.VariableUnits(2)={'UNITLESS'};
     exp.Properties.VariableNames(3)={'Nu'};
     exp.Properties.VariableDescriptions(3)={'Nusselt Number'};

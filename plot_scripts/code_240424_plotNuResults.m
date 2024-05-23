@@ -12,7 +12,7 @@ unc=@LinProp;
 try
     [filenames, dataPath, ~] = uigetfile( ...
         '.mat', 'Select MAT-files (*.mat)', ...
-        'C:\Users\rexer\Documents\MATLAB\heattransfer\test_data\Results', ...
+        '.\test_data\Results', ...
         'MultiSelect', 'on');
      if ischar(filenames)
         filePaths{1}=[dataPath,'/',filenames];
@@ -224,7 +224,7 @@ if false
     % add description
     t.Properties.Description='Serialization of Figure of Nusselt numbers';
     % select path
-    path=uigetdir('C:\Users\rexer\OneDrive - stud.tu-darmstadt.de\Dissertation\Serializer\metadata-serializer');
+    path=uigetdir();
     % generate files for serializer
     generateSerializerInput(t,path)
 

@@ -17,7 +17,7 @@ for ii=length(measureData):-1:1
 
     %read sensor data
     data.p_ID_Sensor=run.sensor_data.p_ID.URI;
-    [temp1, temp2] = retrieveRDFDataset(data.p_ID_Sensor, 'config_json_file_path', "C:\Users\rexer\Documents\MATLAB\heattransfer\fst-rdf-utilities\EXAMPLE.config.json");
+    [temp1, temp2] = retrieveRDFDataset(data.p_ID_Sensor, 'config_json_file_path', ".\fst-rdf-utilities\EXAMPLE.config.json");
     sensor=temp2.(temp1);
     clear temp1 temp2
     data.sensor=sensor;
