@@ -1,0 +1,11 @@
+[submodule "frequency-domain-errors-from-systematic-sensor-errors-package-matlabc"]
+    	path = frequency-domain-errors-from-systematic-sensor-errors-package-matlab
+    	url = https://git.rwth-aachen.de/fst-tuda/public/frequency-domain-errors-from-systematic-sensor-errors-package-matlab.git
+    	branch = development_dissertation
+[submodule "fst-matlab-struct-utilities"]
+	path = fst-matlab-struct-utilities
+	url = https://git.rwth-aachen.de/fst-tuda/projects/designing-with-fluids/hydropulser/fst-matlab-struct-utilities.git
+[submodule "fst-rdf-utilities"]
+	path = fst-rdf-utilities
+	url = https://git.rwth-aachen.de/fst-tuda/projects/designing-with-fluids/hydropulser/fst-rdf-utilities.git
+	branch = development

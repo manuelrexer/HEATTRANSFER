@@ -1,0 +1,5 @@
+
+# Ignore datasets
+/test_data/*
+# ignore Matlab temp files
+*.asv
