@@ -28,6 +28,9 @@ There are a few adaptions that must be made so that the code runs: 
 - one need access to the metadata hub via a personal access token wirtten in "\fst-rdf-utilities\EXAMPLE.config.json"
 - depending on the used fluids the .hdf5 files of fluids physical properties must be added in the \substances directory
 - one need to install curve fitting toolbox
+- one needs to install METAS Unclib a software package written at the Federal Institute of Metrology METAS (Switzerland). Please also see: <br>
+M. Zeier, J. Hoffmann and M. Wollensack. "Metas.UncLib—a measurement uncertainty calculator for advanced problems". In *metrologia 49 (2012)* p. 809-815
+
 
 ## Contact
 
