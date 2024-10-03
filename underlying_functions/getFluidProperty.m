@@ -9,17 +9,20 @@ function value = getFluidProperty(p_ID,p,T,property)
 % p_ID='https://w3id.org/fst/resource/1ed6cc2c-da26-661f-92f3-02c4bb63c743'
 % end
 
+% Get the directory path of the current file to be able to set a
+% path relative to this file.
+currentFilePath = mfilename('fullpath');
+[fileDirPath, ~, ~] = fileparts(currentFilePath);
 
 cd0=cd();
 prt=split(p_ID,'/');
 UUID=prt{6};
-cd(['.\substances\',UUID])
+cd([fileDirPath, '\..\substances\', UUID])
 fileNames=dir();
 h5filepath=fileNames(3);
 
 if strcmp(property,'specific_gas_constant')
-
-    [temp1, temp2] = retrieveRDFDataset(p_ID, 'config_json_file_path', "C:\Users\rexer\Documents\MATLAB\heattransfer\fst-rdf-utilities\EXAMPLE.config.json");
+    [temp1, temp2] = retrieveRDFDataset(p_ID, 'config_json_file_path', [fileDirPath, '\..\fst-rdf-utilities\EXAMPLE.config.json']);
     fluid=temp2.(temp1);
     clear temp1 temp2
     value = fluid.hasProperty.specific_gas_constant.value.literal;
