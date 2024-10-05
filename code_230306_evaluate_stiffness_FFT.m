@@ -6,7 +6,6 @@
 % created: Rexer 28.02.22
 % Version: Disseration v1.0.1
 
-
 %% clear
 clc
 clearvars -except fig_stiffness fig_stiffness_dimless
@@ -21,9 +20,9 @@ if exist('fig_stiffness_dimless')
         clear fig_stiffness_dimless
     end
 end
+
 %% Options and Preperation
 unc = @LinProp;
-
 
 %% Reading the measurement data
 measureData = getMeasureData();
@@ -79,7 +78,7 @@ sampletime = measureData(1).model_PARAMETERS.all_parameters_array(1).value;
 
 %% Analysing load carrying area
 
-figure();plot((measureData(ii).force.value)*1e3./((measureData(ii).gas_pressure_sensor_D130.value-1)*1e5));
+figure('Name','load carrying area');plot((measureData(ii).current_force.value)*1e3./((measureData(ii).pressure_gas.value-1)*1e5));
 
 %% Evaluate measurement data
 % DFT of pressure and Volume
@@ -138,14 +137,14 @@ clear ii
 try
     fig_stiffness = plotFreqResp(excitationFrequency,stiffness,fig_stiffness,'plottype','absolute','ylabel','STEIFIGKEIT in bar/l');
 catch
-    fig_stiffness=figure()
+    fig_stiffness = figure('Name','stiffness')
     fig_stiffness = plotFreqResp(excitationFrequency,stiffness,fig_stiffness,'plottype','absolute');
 end
 publishfig
 try
     fig_stiffness_dimless = plotFreqResp(excitationFrequency,stiffness_dimless,fig_stiffness_dimless,'plottype','absolute','ylabel','STEIFIGKEIT');
 catch
-    fig_stiffness_dimless=figure();
+    fig_stiffness_dimless = figure('Name','stiffness k+');
     fig_stiffness_dimless = plotFreqResp(excitationFrequency,stiffness_dimless,fig_stiffness_dimless,'plottype','absolute');
 end
 publishfig

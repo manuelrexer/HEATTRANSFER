@@ -23,7 +23,6 @@ for ii=length(deflection):-1:1
     DeltaV.unit = 'M3';
     
 
-
     % Getting load volume
     if isfield(testSetup, 'V1')
         if ~isempty(testSetup(ii).V1)
@@ -37,13 +36,13 @@ for ii=length(deflection):-1:1
     end
 
     if V1flag
-        p0=unc(testSetup(ii).p0.value*1e5,testSetup(ii).p0.accuracy*1e5/sqrt(3));
-        V0=unc(testSetup(ii).V0.value,testSetup(ii).V0.accuracy/sqrt(3));
+        p0 = unc(testSetup(ii).p0.value*1e5,testSetup(ii).p0.accuracy*1e5/sqrt(3));
+        V0 = unc(testSetup(ii).V0.value,testSetup(ii).V0.accuracy/sqrt(3));
         
-        p1=unc(mean(pressure(ii).value*1e5), getSumOfSystematicUnc(pressure(ii).unc,mean(pressure(ii).value*1e5))/sqrt(3));
+        p1 = unc(mean(pressure(ii).value*1e5), getSumOfSystematicUnc(pressure(ii).unc, mean(pressure(ii).value*1e5))/sqrt(3));
         % ToDo: Include statistic Uncertainty    
         
-        V1 = p0*V0/p1;            %[Pa*m^3/Pa] = [m^3]
+        V1 = p0*V0/p1;            %[Pa*m^3/Pa] = [m^3], Isotherme Zustandsänderung
 
         testSetup(ii).V1.value = V1.Value;
         testSetup(ii).V1.accuracy = V1.StdUnc*sqrt(3);
@@ -52,10 +51,8 @@ for ii=length(deflection):-1:1
         testSetup(ii).V1.name = 'load volume';
 
     end
-    
-
-
-    % Calculation of acutal Volume
+   
+    % Calculation of actual Volume
     vol.value = V1.Value + DeltaV.value; %[m^3 + m^3]
     
     % Mapping of systematic uncertainty
@@ -68,7 +65,6 @@ for ii=length(deflection):-1:1
     vol.unit = 'M3';
     volume(ii) = vol;
 end
-
 
 end
 % figure()
@@ -90,6 +86,7 @@ for ii=length(fields):-1:1
         delta=delta+(unc.(fields{ii})*mean)^2;
     end
 end
+
 delta=sqrt(delta);
 
 end

@@ -74,7 +74,7 @@ try
         res= 0;
     end
 catch
-    warning(['The the following uncertainty information is not given for this sensor: ',uncfield]);
+    warning(['The the following uncertainty information is not given for this sensor: ', uncfield]);
     res = 0;
 end
 end
