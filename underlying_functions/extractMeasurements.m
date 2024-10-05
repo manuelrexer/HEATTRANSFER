@@ -5,6 +5,10 @@ function [dataStruct] = extractMeasurements(measureData,dataField)
 %   created by Manuel Rexer 03.2024
 %   last adation 21.05.2024
 
+% Get the directory path of the current file to be able to set a
+% path relative to this file. For example for the access token file.
+currentFilePath = mfilename('fullpath');
+[fileDirPath, ~, ~] = fileparts(currentFilePath);
 
 for ii=length(measureData):-1:1
     % define run
@@ -17,7 +21,7 @@ for ii=length(measureData):-1:1
 
     %read sensor data
     data.p_ID_Sensor=run.sensor_data.p_ID.URI;
-    [temp1, temp2] = retrieveRDFDataset(data.p_ID_Sensor, 'config_json_file_path', ".\fst-rdf-utilities\EXAMPLE.config.json");
+    [temp1, temp2] = retrieveRDFDataset(data.p_ID_Sensor, 'config_json_file_path', [fileDirPath, '\..\fst-rdf-utilities\EXAMPLE.config.json']);
     sensor=temp2.(temp1);
     clear temp1 temp2
     data.sensor=sensor;
