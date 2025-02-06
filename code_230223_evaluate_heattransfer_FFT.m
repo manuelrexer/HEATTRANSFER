@@ -256,7 +256,8 @@ switch testSetup(2).testobject.prefix
         plotopts={'s'};
         testObj= 'cylinder';
     otherwise
-        plotopts={'-'};
+        %plotopts={'-'};
+        error("You are using a test component that isn't yet supported by this script!");
 end
 
 
