@@ -235,6 +235,10 @@ switch testSetup(2).testobject.prefix
         %accumulator 1,3l
         plotopts={'o','Markersize',5};
         testObj= 'Accumulator_1.3l';
+    case 'https://w3id.org/fst/resource//018bfcec-5048-78fe-a641-c44aa533b894'
+        % Different accumulator 1,3l
+        plotopts={'o', 'Markersize', 5};
+        testObj= 'Accumulator_1.3l';
     case 'https://w3id.org/fst/resource//018bfcec-504b-7ec8-9530-a42b1857e17c'
         %accumulator 0.6l
         plotopts={'o','Markersize',4};
