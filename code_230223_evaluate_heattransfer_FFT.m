@@ -69,30 +69,30 @@ else
     fig_NuPe=figure('name','Nu(Pe)');
 end
 % plot selected runs
-for jj =selectedruns.runs
+for jj = selectedruns.runs
     for ii=1
         fig_NuPe = plotFreqResp(data.Pe(runs(jj).ind), data.plotNu_pv(ii).res(runs(jj).ind), fig_NuPe, ...
             'plottype', 'loglog', ...
             'ylabel', 'Nusselt', ...
             'ylim', [0.1,10^3],...
-            'xlabel','Pe', ...
-            'phase',true, ...
-            'plotOpts',plotopts);
+            'xlabel', 'Pe', ...
+            'phase', true, ...
+            'plotOpts', plotopts);
     end
 end
-setfigpos(12.5,11.5,'m')
+setfigpos(12.5, 11.5, 'm')
 
 % Plot Nusselt Number in real and imaginary part depending on peclet number
 % initiate figure
 if exist('fig_ReIm', 'var')
     if isempty(fig_ReIm.findobj)
-        fig_ReIm=figure('name','Real- and imag Part of Nusseltnumber');
-        tiledlayout(1,2,"Padding","tight","TileSpacing","tight")
+        fig_ReIm = figure('name','Real- and imag Part of Nusseltnumber');
+        tiledlayout(1, 2, "Padding", "tight", "TileSpacing", "tight")
         publishfig
     end
 else
     fig_ReIm=figure('name','Nu(Pe)');
-    tiledlayout(1,2,"Padding","tight","TileSpacing","tight")
+    tiledlayout(1, 2, "Padding", "tight", "TileSpacing", "tight")
     publishfig
 end
 
@@ -274,7 +274,7 @@ setfigpos(12.5,11.5,'m')
 for ii=length(measureData):-1:1
     % get measurement IDs
     % if it doesnt exist add a number
-    if isfield(measureData(ii).METADATA,'measurement_UUID')
+    if isfield(measureData(ii).METADATA, 'measurement_UUID')
         measID{ii}=[measureData(ii).METADATA.measurement_UUID];
     else
         measID{ii}=num2str(ii);
