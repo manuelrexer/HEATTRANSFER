@@ -8,6 +8,12 @@ function setupParameter=getTestrigParameter(measureData)
 %   Author: Rexer
 %   Last edit. 20.05.2024
 
+% Get the directory path of the current file to be able to set a
+% path relative to this file. For example for the access token file.
+currentFilePath = mfilename('fullpath');
+[fileDirPath, ~, ~] = fileparts(currentFilePath);
+
+
 for ii=length(measureData):-1:1
     testobject_ID={};
     fluid_ID={};
@@ -28,7 +34,7 @@ for ii=length(measureData):-1:1
     end
     % get test object data
     if length(testobject_ID)==1
-        [temp1, temp2] = retrieveRDFDataset(testobject_ID{1}, 'config_json_file_path', ".\fst-rdf-utilities\EXAMPLE.config.json");
+        [temp1, temp2] = retrieveRDFDataset(testobject_ID{1}, 'config_json_file_path', [fileDirPath, '\..\fst-rdf-utilities\EXAMPLE.config.json']);
         testobject=temp2.(temp1);
         clear temp1 temp2
         importantParameter.testobject=testobject;
@@ -38,7 +44,7 @@ for ii=length(measureData):-1:1
     % if we use the accumulator testrig it is a little different
     if acc_setup
         testrig_ID=measureData(ii).METADATA.hardware.(hardwaresetup{acctestrig_IND}).p_ID;
-        [temp1, temp2] = retrieveRDFDataset(testrig_ID, 'config_json_file_path', ".\fst-rdf-utilities\EXAMPLE.config.json");
+        [temp1, temp2] = retrieveRDFDataset(testrig_ID, 'config_json_file_path', [fileDirPath, '\..\fst-rdf-utilities\EXAMPLE.config.json']);
         testrig=temp2.(temp1);
         importantParameter.testrig=testrig;
         clear temp1 temp2

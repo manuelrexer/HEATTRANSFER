@@ -73,7 +73,7 @@ hold on
 box off
 % plot
 if metas
-    errorbar(vFreqs, abs(vH.Value), yneg ,  ypos,plotOpts{:},'MarkerFaceColor','white')
+    errorbar(vFreqs, abs(vH.Value), yneg , ypos,plotOpts{:},'MarkerFaceColor','white')
 else
     plot(vFreqs, abs(vH), plotOpts{:},'MarkerFaceColor','white')
 end
