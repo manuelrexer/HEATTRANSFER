@@ -338,8 +338,21 @@ for jj=length(runs):-1:1
         num2str(runs(jj).p0),'_bar_p1_',...
         num2str(runs(jj).p1),'_bar' ];
 
+    
+    % ## Create the directory relative to it if it doesnt exists
+    % Get the directory of the current file
+    currentFileDir = fileparts(mfilename('fullpath'));
 
-    save(['test_data\Results\',exp.Properties.Description,'.mat'],'exp')
+    % Declare the relative path
+    relativePath = fullfile(currentFileDir, '.\test_data\Results\');
+    
+    % Check if the directory exists, if not, create it recursively
+    if ~exist(relativePath, 'dir')
+        mkdir(relativePath);
+    end
+    
+    % Save the results as .mat
+    save(['test_data\Results\', exp.Properties.Description,'.mat'], 'exp')
 
 end
 
