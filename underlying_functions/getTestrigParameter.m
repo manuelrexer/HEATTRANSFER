@@ -22,7 +22,7 @@ for ii=length(measureData):-1:1
     acc_setup=false;
     for jj=length(hardwaresetup):-1:1
         objtypes{jj}=measureData(ii).METADATA.hardware.(hardwaresetup{jj}).type;
-        if strcmpi(objtypes{jj},"TestObject")
+        if contains(objtypes{jj}, "TestObject", 'IgnoreCase', true)
             testobject_ID{end+1}=measureData(ii).METADATA.hardware.(hardwaresetup{jj}).p_ID;
             fluid_ID{end+1}=measureData(ii).METADATA.hardware.(hardwaresetup{jj}).fluid.p_ID;
         end
