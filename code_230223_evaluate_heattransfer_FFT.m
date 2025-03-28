@@ -344,15 +344,15 @@ for jj=length(runs):-1:1
     currentFileDir = fileparts(mfilename('fullpath'));
 
     % Declare the relative path
-    relativePath = fullfile(currentFileDir, '.\test_data\Results\');
+    relativeResultsDirPath = fullfile(currentFileDir, '.\test_data\Results\');
     
     % Check if the directory exists, if not, create it recursively
-    if ~exist(relativePath, 'dir')
-        mkdir(relativePath);
+    if ~exist(relativeResultsDirPath, 'dir')
+        mkdir(relativeResultsDirPath);
     end
     
     % Save the results as .mat
-    save(['test_data\Results\', exp.Properties.Description,'.mat'], 'exp')
+    save([relativeResultsDirPath, exp.Properties.Description,'.mat'], 'exp')
 
 end
 
