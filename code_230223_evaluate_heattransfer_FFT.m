@@ -44,8 +44,8 @@ catch
     cd(cd0)
 end
 % select a run from the Dataset
-runs=getMeasurementRuns(measureData);
-selectedruns=selectRuns(runs);
+runs = getMeasurementRuns(measureData);
+selectedruns = selectRuns(runs);
 
 
 [data, plotopts, testObj] = evaluate_heattransfer_FFT_function(measureData);
@@ -60,15 +60,16 @@ selectedruns=selectRuns(runs);
 if nusselt_plot_FLAG
     if exist ('fig_Nu', 'var')
         if isempty(fig_Nu.findobj)
-            fig_Nu=figure('name','Nu(f)');
+            fig_Nu = figure('name','Nu(f)');
         end
     else
-        fig_Nu=figure('name','Nu(f)');
+        fig_Nu = figure('name','Nu(f)');
     end
     
     % Plot selected runs in the Nusselt figure.
-    for jj =selectedruns.runs
-        for ii=1
+    for jj = selectedruns.runs
+        % FIXME: Why that construct?
+        for ii = 1
             fig_Nu = plotFreqResp(data.excitationFrequency(runs(jj).ind), data.plotNu_pv(ii).res(runs(jj).ind), fig_Nu,...
                 'plottype', 'loglog', ...
                 'ylabel', 'Nusselt', ...
@@ -85,15 +86,16 @@ end
 if nusselt_bode_pecled_plot_FLAG
     if exist('fig_NuPe', 'var')
         if isempty(fig_NuPe.findobj)
-            fig_NuPe=figure('name','Nu(Pe)');
+            fig_NuPe = figure('name','Nu(Pe)');
         end
     else
-        fig_NuPe=figure('name','Nu(Pe)');
+        fig_NuPe = figure('name','Nu(Pe)');
     end
     
     % Plot selected runs in the Bode figure.
     for jj = selectedruns.runs
-        for ii=1
+        % FIXME: Why that construct?
+        for ii = 1
             fig_NuPe = plotFreqResp(data.Pe(runs(jj).ind), data.plotNu_pv(ii).res(runs(jj).ind), fig_NuPe, ...
                 'plottype', 'loglog', ...
                 'ylabel', 'Nusselt', ...
@@ -122,23 +124,23 @@ if nusselt_real_imag_peclet_plot_FLAG
     end
     
     % Plot selected runs in the peclet number figure.
-    for jj =selectedruns.runs
+    for jj = selectedruns.runs
         figure(fig_NuReIm)
     
-        ax1=nexttile(1);
+        ax1 = nexttile(1);
         plot(data.Pe(runs(jj).ind), real([data.plotNu_pv(1).res(runs(jj).ind)]))
         box off
         hold on
-        ax1.XScale='log';
-        ax1.YScale='log';
+        ax1.XScale = 'log';
+        ax1.YScale = 'log';
         xlabel('Pe')
         ylabel('Re(Nu)')
         ax2=nexttile(2);
         plot(data.Pe(runs(jj).ind), imag([data.plotNu_pv(1).res(runs(jj).ind)]))
         box off
         hold on
-        ax2.XScale='log';
-        ax2.YScale='log';
+        ax2.XScale = 'log';
+        ax2.YScale = 'log';
     end
     xlabel('Pe')
     ylabel('Im(Nu)')
@@ -154,15 +156,15 @@ if FFT_plot_FLAG
     % plots
     stem(data.volume(end).FFT.frequencies(1:end/2), abs(data.volume(end).FFT.value(1:end/2)), 'Marker', 'none')
     hold on
-    plot(data.volume(end).FFT.frequencies(1:end/2),abs(data.volume(end).FFT.value(1:end/2)), "o", 'MarkerFaceColor', 'white', 'MarkerEdgeColor', 'black', 'MarkerSize', 4)
+    plot(data.volume(end).FFT.frequencies(1:end/2), abs(data.volume(end).FFT.value(1:end/2)), "o", 'MarkerFaceColor', 'white', 'MarkerEdgeColor', 'black', 'MarkerSize', 4)
     box off
     ylabel('MAGNITUDE VOLUMEN')
     xlabel('FREQUENZ')
-    xlim([0,500])
+    xlim([0, 500])
     set(gca,'YScale', 'log')
-    setfigpos(6.9,6.9,'m')
-    x = linspace(0, 2*pi, 100);
+    setfigpos(6.9, 6.9, 'm')
 
+    % x = linspace(0, 2*pi, 100);
     % legend('sin(x)', 'cos(x)')
 
     publishfig
@@ -206,7 +208,7 @@ if uncertainty_analyzation_plots_FLAG
     % initiate figure
     fig_unc_analyzation_volume_abs = figure('Name', 'volume abs');
     tiledlayout("flow", "TileSpacing", "compact")
-    for ii=length(data.volume):-1:1
+    for ii = length(data.volume):-1:1
         nexttile
 
         stem(data.volume(ii).FFT.harmonic.frequencies, abs(data.volume(ii).FFT.harmonic.metas.Value))
@@ -218,7 +220,7 @@ if uncertainty_analyzation_plots_FLAG
 
     fig_unc_analyzation_volume_phase = figure('Name','volume phase')
     tiledlayout("flow","TileSpacing","compact")
-    for ii=length(data.volume):-1:1
+    for ii = length(data.volume):-1:1
         nexttile
 
         stem(data.volume(ii).FFT.harmonic.frequencies, phase(data.volume(ii).FFT.harmonic.metas.Value))
@@ -231,7 +233,7 @@ if uncertainty_analyzation_plots_FLAG
     % pressure
     fig_unc_analyzation_pressure_abs = figure('Name','pressure abs')
     tiledlayout("flow","TileSpacing","compact")
-    for ii=length(data.pressure):-1:1
+    for ii = length(data.pressure):-1:1
         nexttile
         stem(data.pressure(ii).FFT.harmonic.frequencies, abs(data.pressure(ii).FFT.harmonic.metas.Value))
         hold on
@@ -243,7 +245,7 @@ if uncertainty_analyzation_plots_FLAG
     % initiate figure
     fig_unc_analyzation_pressure_phase = figure('Name','pressure phase')
     tiledlayout("flow","TileSpacing","compact")
-    for ii=length(data.pressure):-1:1
+    for ii = length(data.pressure):-1:1
         nexttile
         stem(data.pressure(ii).FFT.harmonic.frequencies, phase(data.pressure(ii).FFT.harmonic.metas.Value))
         hold on
@@ -284,19 +286,19 @@ if dimless_stiffness_plot_FLAG
     for jj =selectedruns.runs
         try
             fig_stiffness_dimless = plotFreqResp(data.Pe(runs(jj).ind), data.stiffness_dimless(runs(jj).ind), fig_stiffness_dimless, ...
-                'plottype','absolute', ...
-                'ylabel','STEIFIGKEIT K^+', ...
-                'xlabel','PECLET', ...
-                'phase',true, ...
-                'plotOpts',plotopts);
+                'plottype', 'absolute', ...
+                'ylabel', 'STEIFIGKEIT K^+', ...
+                'xlabel', 'PECLET', ...
+                'phase', true, ...
+                'plotOpts', plotopts);
         catch
             fig_stiffness_dimless=figure('name','Dim.less Stiffness K+');
             fig_stiffness_dimless = plotFreqResp(data.Pe(runs(jj).ind), data.stiffness_dimless(runs(jj).ind), fig_stiffness_dimless, ...
-                'plottype','absolute', ...
-                'ylabel','STEIFIGKEIT K^+', ...
-                'xlabel','PECLET', ...
-                'phase',true, ...
-                'plotOpts',plotopts);
+                'plottype', 'absolute', ...
+                'ylabel', 'STEIFIGKEIT K^+', ...
+                'xlabel', 'PECLET', ...
+                'phase', true, ...
+                'plotOpts', plotopts);
         end
 
         % Include proposed models from Lee, Pelz and Rexer for comparison.
@@ -306,7 +308,7 @@ if dimless_stiffness_plot_FLAG
             fig_stiffness_dimless = plotFreqResp(data.Pe(runs(jj).ind), data.stiffness_dimless_Pelz(runs(jj).ind), fig_stiffness_dimless, 'plotOpts', {'-'}, 'plottype', 'absolute', 'ylabel', 'STEIFIGKEIT K^+', 'phase', true);
         end
     end
-    setfigpos(12.5,11.5,'m')
+    setfigpos(12.5, 11.5, 'm')
 end
 
 %% Save figures.
@@ -334,19 +336,19 @@ end
 
 %% Arange and save Data
 if save_result_data_FLAG
-    for ii=length(measureData):-1:1
+    for ii = length(measureData):-1:1
         % get measurement IDs
         % if it doesnt exist add a number
         if isfield(measureData(ii).METADATA, 'measurement_UUID')
-            measID{ii}=[measureData(ii).METADATA.measurement_UUID];
+            measID{ii} = [measureData(ii).METADATA.measurement_UUID];
         else
-            measID{ii}=num2str(ii);
+            measID{ii} = num2str(ii);
         end
     end
     
-    for jj=length(runs):-1:1
+    for jj = length(runs):-1:1
         % get Run name
-        exp=table(data.excitationFrequency(runs(jj).ind).',...
+        exp = table(data.excitationFrequency(runs(jj).ind).',...
             data.Pe(runs(jj).ind).',...
             data.plotNu_pv(1).res.Value(runs(jj).ind).', ...
             data.plotNu_pv(1).res.StdUnc(runs(jj).ind).', ...
@@ -360,34 +362,34 @@ if save_result_data_FLAG
         exp = addprop(exp,{'TestObject','zAmp','p0','p1','Ta'}, ...
             {'table','table','table','table','table'});
     
-        exp.Properties.VariableNames(1)={'f0'};
-        exp.Properties.VariableDescriptions(1)={'Ecxitation Frequency'};
-        exp.Properties.VariableUnits(1)={'HZ'};
-        exp.Properties.VariableNames(2)={'Pe'};
-        exp.Properties.VariableDescriptions(2)={'Pclet Number'};
-        exp.Properties.VariableUnits(2)={'UNITLESS'};
-        exp.Properties.VariableNames(3)={'Nu'};
-        exp.Properties.VariableDescriptions(3)={'Nusselt Number'};
-        exp.Properties.VariableUnits(3)={'UNITLESS'};
-        exp.Properties.VariableNames(4)={'Nu_StdUnc'};
-        exp.Properties.VariableDescriptions(4)={'95-percent uncertainty of the Nusselt number'};
-        exp.Properties.VariableUnits(4)={'UNITLESS'};
-        exp.Properties.VariableNames(5)={'K'};
-        exp.Properties.VariableDescriptions(5)={'Stiffness'};
-        exp.Properties.VariableUnits(5)={'BAR-PER-M3'};
-        exp.Properties.VariableNames(6)={'K_StdUnc'};
-        exp.Properties.VariableDescriptions(6)={'95-percent uncertainty of the Stiffness'};
-        exp.Properties.VariableUnits(6)={'BAR-PER-M3'};
-        exp.Properties.VariableNames(7)={'K+'};
-        exp.Properties.VariableDescriptions(7)={'Dimensionless Stiffness'};
-        exp.Properties.VariableUnits(7)={'UNITLESS'};
-        exp.Properties.VariableNames(8)={'K+_StdUnc'};
-        exp.Properties.VariableDescriptions(8)={'95-percent uncertainty of the Dimensionless Stiffness'};
-        exp.Properties.VariableUnits(8)={'UNITLESS'};
-        exp.Properties.VariableNames(9)={'Measurement_UUID'};
-        exp.Properties.VariableNames(10)={'gamma'};
-        exp.Properties.VariableDescriptions(10)={'Isentropic Exponent'};
-        exp.Properties.VariableUnits(10)={'UNITLESS'};
+        exp.Properties.VariableNames(1) = {'f0'};
+        exp.Properties.VariableDescriptions(1) = {'Ecxitation Frequency'};
+        exp.Properties.VariableUnits(1) = {'HZ'};
+        exp.Properties.VariableNames(2) = {'Pe'};
+        exp.Properties.VariableDescriptions(2) = {'Pclet Number'};
+        exp.Properties.VariableUnits(2) = {'UNITLESS'};
+        exp.Properties.VariableNames(3) = {'Nu'};
+        exp.Properties.VariableDescriptions(3) = {'Nusselt Number'};
+        exp.Properties.VariableUnits(3) = {'UNITLESS'};
+        exp.Properties.VariableNames(4) = {'Nu_StdUnc'};
+        exp.Properties.VariableDescriptions(4) = {'95-percent uncertainty of the Nusselt number'};
+        exp.Properties.VariableUnits(4) = {'UNITLESS'};
+        exp.Properties.VariableNames(5) = {'K'};
+        exp.Properties.VariableDescriptions(5) = {'Stiffness'};
+        exp.Properties.VariableUnits(5) = {'BAR-PER-M3'};
+        exp.Properties.VariableNames(6) = {'K_StdUnc'};
+        exp.Properties.VariableDescriptions(6) = {'95-percent uncertainty of the Stiffness'};
+        exp.Properties.VariableUnits(6) = {'BAR-PER-M3'};
+        exp.Properties.VariableNames(7) = {'K+'};
+        exp.Properties.VariableDescriptions(7) = {'Dimensionless Stiffness'};
+        exp.Properties.VariableUnits(7) = {'UNITLESS'};
+        exp.Properties.VariableNames(8) = {'K+_StdUnc'};
+        exp.Properties.VariableDescriptions(8) = {'95-percent uncertainty of the Dimensionless Stiffness'};
+        exp.Properties.VariableUnits(8) = {'UNITLESS'};
+        exp.Properties.VariableNames(9) = {'Measurement_UUID'};
+        exp.Properties.VariableNames(10) = {'gamma'};
+        exp.Properties.VariableDescriptions(10) = {'Isentropic Exponent'};
+        exp.Properties.VariableUnits(10) = {'UNITLESS'};
     
         exp.Properties.CustomProperties.TestObject = testObj;
         exp.Properties.CustomProperties.zAmp = runs(jj).amplitude;
@@ -396,10 +398,10 @@ if save_result_data_FLAG
         exp.Properties.CustomProperties.p1 = runs(jj).p1;
     
         exp.Properties.Description = [testObj,'_',...
-            num2str(runs(jj).amplitude),'_mm_',...
-            num2str(runs(jj).temperature),'_C_p0_',...
-            num2str(runs(jj).p0),'_bar_p1_',...
-            num2str(runs(jj).p1),'_bar' ];
+            num2str(runs(jj).amplitude), '_mm_',...
+            num2str(runs(jj).temperature), '_C_p0_',...
+            num2str(runs(jj).p0), '_bar_p1_',...
+            num2str(runs(jj).p1), '_bar' ];
     
         
         % ## Create the directory relative to it if it doesnt exists
