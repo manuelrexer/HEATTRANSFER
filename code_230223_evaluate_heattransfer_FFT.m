@@ -10,6 +10,7 @@
 clc
 clearvars -except fig_Nu fig_NuPe fig_stiffness fig_stiffness_dimless fig_NuReIm
 
+%% Setup
 currentFileDir = fileparts(mfilename('fullpath'));
 generated_files_path = [currentFileDir, '\', '_generated'];
 generated_plots_path = [currentFileDir, '\', '_generated', '\', 'plots'];
@@ -33,7 +34,8 @@ if ~exist(generated_data_results_path, 'dir')
     mkdir(generated_data_results_path);
 end
 
-% __ FLAGS __
+
+%% ___ FLAGS ___ (Options)
 nusselt_plot_FLAG = true;
 nusselt_bode_pecled_plot_FLAG = true;
 nusselt_real_imag_peclet_plot_FLAG = true;
@@ -53,11 +55,9 @@ save_result_data_FLAG = false;
 save_figures_FLAG = true;
 
 
-%% Options and Preperation
-
+%% Reading the measurement data
 % current directory
 cd0=cd();
-%% Reading the measurement data
 try
     cd()
     measureData = getMeasureData();
@@ -71,6 +71,7 @@ selectedruns = selectRuns(runs);
 
 
 [data, plotopts, testObj] = evaluate_heattransfer_FFT_function(measureData);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plots
@@ -333,6 +334,7 @@ if dimless_stiffness_plot_FLAG
     setfigpos(12.5, 11.5, 'm')
 end
 
+
 %% Save figures.
 % Possible figures:
 % fig_Nu
@@ -403,8 +405,6 @@ if save_figures_FLAG
     end
 
 end
-
-
 
 
 %% Arange and save Data
