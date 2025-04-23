@@ -8,7 +8,7 @@
 
 %% clear workspace
 clc
-clearvars -except fig_Nu fig_NuPe fig_stiffness fig_stiffness_dimless fig_ReIm
+clearvars -except fig_Nu fig_NuPe fig_stiffness fig_stiffness_dimless fig_NuReIm
 
 
 % __ FLAGS __
@@ -28,6 +28,7 @@ dimless_stiffness_plot_FLAG = true;
 dimless_stiffness_plot__model_compare__FLAG = false; 
 
 save_result_data_FLAG = false;
+save_figures_FLAG = false;
 
 
 %% Options and Preperation
@@ -108,21 +109,21 @@ end
 % Plot Nusselt Number in real and imaginary part depending on peclet number
 % Initiate peclet number figure.
 if nusselt_real_imag_peclet_plot_FLAG
-    if exist('fig_ReIm', 'var')
-        if isempty(fig_ReIm.findobj)
-            fig_ReIm = figure('name','Real- and imag Part of Nusseltnumber');
+    if exist('fig_NuReIm', 'var')
+        if isempty(fig_NuReIm.findobj)
+            fig_NuReIm = figure('name','Real- and imag Part of Nusseltnumber');
             tiledlayout(1, 2, "Padding", "tight", "TileSpacing", "tight")
             publishfig
         end
     else
-        fig_ReIm=figure('name','Nu(Pe)');
+        fig_NuReIm = figure('name','Nu(Pe)');
         tiledlayout(1, 2, "Padding", "tight", "TileSpacing", "tight")
         publishfig
     end
     
     % Plot selected runs in the peclet number figure.
     for jj =selectedruns.runs
-        figure(fig_ReIm)
+        figure(fig_NuReIm)
     
         ax1=nexttile(1);
         plot(data.Pe(runs(jj).ind), real([data.plotNu_pv(1).res(runs(jj).ind)]))
@@ -149,7 +150,7 @@ end
 if FFT_plot_FLAG
     % maginute volume
     % initiate figrue
-    figure('Name','volume abs');
+    fig_FFT_volume = figure('Name','volume abs');
     % plots
     stem(data.volume(end).FFT.frequencies(1:end/2), abs(data.volume(end).FFT.value(1:end/2)), 'Marker', 'none')
     hold on
@@ -160,11 +161,15 @@ if FFT_plot_FLAG
     xlim([0,500])
     set(gca,'YScale', 'log')
     setfigpos(6.9,6.9,'m')
+    x = linspace(0, 2*pi, 100);
+
+    % legend('sin(x)', 'cos(x)')
+
     publishfig
 
     % maginute pressure
     % initiate figrue
-    figure('Name','pressure abs');
+    fig_FFT_pressure = figure('Name','pressure abs');
     % plots
     stem(data.pressure(end).FFT.frequencies(1:end/2), abs(data.pressure(end).FFT.value(1:end/2)),'Marker','none')
     hold on
@@ -183,13 +188,13 @@ end
 % seperate figures.
 if stacked_uncertainty_plots_FLAG
     % staced uncertainty plots of pressure
-    fig_unc_pressure = figure('name','Uncertainty Pressure');
-    fig_unc_pressure = plotUncFFTStacked(data.pressure(runs.ind), fig_unc_pressure);
+    fig_stacked_unc_pressure = figure('name','Uncertainty Pressure');
+    fig_stacked_unc_pressure = plotUncFFTStacked(data.pressure(runs.ind), fig_stacked_unc_pressure);
     publishfig
     setfigpos(13.7,6.9,'m')
     % staced uncertatinty plot of volume
-    fig_unc_volume = figure('name','Uncertainty volume');
-    fig_unc_volume = plotUncFFTStacked(data.volume(runs.ind), fig_unc_volume);
+    fig_stacked_unc_volume = figure('name','Uncertainty volume');
+    fig_stacked_unc_volume = plotUncFFTStacked(data.volume(runs.ind), fig_stacked_unc_volume);
     publishfig
     setfigpos(13.7,6.9,'m')
 end
@@ -199,7 +204,7 @@ end
 if uncertainty_analyzation_plots_FLAG
     % Volume
     % initiate figure
-    figure('Name', 'volume abs');
+    fig_unc_analyzation_volume_abs = figure('Name', 'volume abs');
     tiledlayout("flow", "TileSpacing", "compact")
     for ii=length(data.volume):-1:1
         nexttile
@@ -211,7 +216,7 @@ if uncertainty_analyzation_plots_FLAG
         ylim([0,0.00002])
     end
 
-    figure('Name','volume phase')
+    fig_unc_analyzation_volume_phase = figure('Name','volume phase')
     tiledlayout("flow","TileSpacing","compact")
     for ii=length(data.volume):-1:1
         nexttile
@@ -222,21 +227,9 @@ if uncertainty_analyzation_plots_FLAG
         box off
         ylim([-pi/2,pi/2])
     end
+
     % pressure
-    % initiate figure
-    figure('Name','pressure phase')
-    tiledlayout("flow","TileSpacing","compact")
-    for ii=length(data.pressure):-1:1
-        nexttile
-
-        stem(data.pressure(ii).FFT.harmonic.frequencies, phase(data.pressure(ii).FFT.harmonic.metas.Value))
-        hold on
-        errorbar(data.pressure(ii).FFT.harmonic.frequencies, phase(data.pressure(ii).FFT.harmonic.metas.Value), phase(data.pressure(ii).FFT.harmonic.metas.StdUnc), 'LineStyle', 'none')
-        box off
-        % ylim([0,5])
-    end
-
-    figure('Name','pressure abs')
+    fig_unc_analyzation_pressure_abs = figure('Name','pressure abs')
     tiledlayout("flow","TileSpacing","compact")
     for ii=length(data.pressure):-1:1
         nexttile
@@ -247,6 +240,17 @@ if uncertainty_analyzation_plots_FLAG
         ylim([0,5])
     end
 
+    % initiate figure
+    fig_unc_analyzation_pressure_phase = figure('Name','pressure phase')
+    tiledlayout("flow","TileSpacing","compact")
+    for ii=length(data.pressure):-1:1
+        nexttile
+        stem(data.pressure(ii).FFT.harmonic.frequencies, phase(data.pressure(ii).FFT.harmonic.metas.Value))
+        hold on
+        errorbar(data.pressure(ii).FFT.harmonic.frequencies, phase(data.pressure(ii).FFT.harmonic.metas.Value), phase(data.pressure(ii).FFT.harmonic.metas.StdUnc), 'LineStyle', 'none')
+        box off
+        % ylim([0,5])
+    end
 end
 
 
@@ -304,6 +308,29 @@ if dimless_stiffness_plot_FLAG
     end
     setfigpos(12.5,11.5,'m')
 end
+
+%% Save figures.
+% Possible figures:
+% fig_Nu
+% fig_NuPe
+% fig_NuReIm
+% fig_FFT_volume
+% fig_FFT_pressure
+% fig_stacked_unc_pressure
+% fig_stacked_unc_volume
+% fig_unc_analyzation_volume_abs
+% fig_unc_analyzation_volume_phase
+% fig_unc_analyzation_pressure_abs
+% fig_unc_analyzation_pressure_phase
+% fig_stiffness
+% fig_stiffness_dimless
+
+% if save_figures_FLAG
+%    if exist('fig_Nu', 'var')
+%        saveas(fig_Nu, 'fig_Nu.pdf', 'pdf');
+%    end
+% 
+% end
 
 %% Arange and save Data
 if save_result_data_FLAG
