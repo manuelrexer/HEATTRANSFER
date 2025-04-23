@@ -50,7 +50,7 @@ dimless_stiffness_plot_FLAG = true;
 dimless_stiffness_plot__model_compare__FLAG = false; 
 
 save_result_data_FLAG = false;
-save_figures_FLAG = false;
+save_figures_FLAG = true;
 
 
 %% Options and Preperation
@@ -349,12 +349,63 @@ end
 % fig_stiffness
 % fig_stiffness_dimless
 
-% if save_figures_FLAG
-%    if exist('fig_Nu', 'var')
-%        saveas(fig_Nu, 'fig_Nu.pdf', 'pdf');
-%    end
-% 
-% end
+if save_figures_FLAG
+    if exist('fig_Nu', 'var')
+        print(fig_Nu, fullfile(generated_plots_path, 'fig_Nu.svg'), '-dsvg');
+    end
+
+    if exist('fig_NuPe', 'var')
+        print(fig_NuPe, fullfile(generated_plots_path, 'fig_NuPe.svg'), '-dsvg');
+    end
+
+    if exist('fig_NuReIm', 'var')
+        print(fig_NuReIm, fullfile(generated_plots_path, 'fig_NuReIm.svg'), '-dsvg');
+    end
+
+    if exist('fig_FFT_volume', 'var')
+        print(fig_FFT_volume, fullfile(generated_plots_path, 'fig_FFT_volume.svg'), '-dsvg');
+    end
+
+    if exist('fig_FFT_pressure', 'var')
+        print(fig_FFT_pressure, fullfile(generated_plots_path, 'fig_FFT_pressure.svg'), '-dsvg');
+    end
+
+    if exist('fig_stacked_unc_pressure', 'var')
+        print(fig_stacked_unc_pressure, fullfile(generated_plots_path, 'fig_stacked_unc_pressure.svg'), '-dsvg');
+    end
+
+    if exist('fig_stacked_unc_volume', 'var')
+        print(fig_stacked_unc_volume, fullfile(generated_plots_path, 'fig_stacked_unc_volume.svg'), '-dsvg');
+    end
+
+    if exist('fig_unc_analyzation_volume_abs', 'var')
+        print(fig_unc_analyzation_volume_abs, fullfile(generated_plots_path, 'fig_unc_analyzation_volume_abs.svg'), '-dsvg');
+    end
+
+    if exist('fig_unc_analyzation_volume_phase', 'var')
+        print(fig_unc_analyzation_volume_phase, fullfile(generated_plots_path, 'fig_unc_analyzation_volume_phase.svg'), '-dsvg');
+    end
+
+    if exist('fig_unc_analyzation_pressure_abs', 'var')
+        print(fig_unc_analyzation_pressure_abs, fullfile(generated_plots_path, 'fig_unc_analyzation_pressure_abs.svg'), '-dsvg');
+    end
+
+    if exist('fig_unc_analyzation_pressure_phase', 'var')
+        print(fig_unc_analyzation_pressure_phase, fullfile(generated_plots_path, 'fig_unc_analyzation_pressure_phase.svg'), '-dsvg');
+    end
+
+    if exist('fig_stiffness', 'var')
+        print(fig_stiffness, fullfile(generated_plots_path, 'fig_stiffness.svg'), '-dsvg');
+    end
+
+    if exist('fig_stiffness_dimless', 'var')
+        print(fig_stiffness_dimless, fullfile(generated_plots_path, 'fig_stiffness_dimless.svg'), '-dsvg');
+    end
+
+end
+
+
+
 
 %% Arange and save Data
 if save_result_data_FLAG
