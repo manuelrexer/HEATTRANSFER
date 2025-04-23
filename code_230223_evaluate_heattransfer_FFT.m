@@ -10,6 +10,28 @@
 clc
 clearvars -except fig_Nu fig_NuPe fig_stiffness fig_stiffness_dimless fig_NuReIm
 
+currentFileDir = fileparts(mfilename('fullpath'));
+generated_files_path = [currentFileDir, '\', '_generated'];
+generated_plots_path = [currentFileDir, '\', '_generated', '\', 'plots'];
+generated_data_path = [currentFileDir, '\', '_generated', '\', 'data'];
+generated_data_results_path = [currentFileDir, '\', '_generated', '\', 'data', '\', 'results'];
+
+
+if ~exist(generated_files_path, 'dir')
+    mkdir(generated_files_path);
+end
+
+if ~exist(generated_plots_path, 'dir')
+    mkdir(generated_plots_path);
+end
+
+if ~exist(generated_data_path, 'dir')
+    mkdir(generated_data_path);
+end
+
+if ~exist(generated_data_results_path, 'dir')
+    mkdir(generated_data_results_path);
+end
 
 % __ FLAGS __
 nusselt_plot_FLAG = true;
@@ -402,22 +424,9 @@ if save_result_data_FLAG
             num2str(runs(jj).temperature), '_C_p0_',...
             num2str(runs(jj).p0), '_bar_p1_',...
             num2str(runs(jj).p1), '_bar' ];
-    
-        
-        % ## Create the directory relative to it if it doesnt exists
-        % Get the directory of the current file
-        currentFileDir = fileparts(mfilename('fullpath'));
-    
-        % Declare the relative path
-        relativeResultsDirPath = fullfile(currentFileDir, '.\test_data\Results\');
-        
-        % Check if the directory exists, if not, create it recursively
-        if ~exist(relativeResultsDirPath, 'dir')
-            mkdir(relativeResultsDirPath);
-        end
-        
+   
         % Save the results as .mat
-        save([relativeResultsDirPath, exp.Properties.Description,'.mat'], 'exp')
+        save([generated_data_results_path, exp.Properties.Description,'.mat'], 'exp')
     end
 end
 
