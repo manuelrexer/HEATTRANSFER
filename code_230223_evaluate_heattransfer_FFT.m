@@ -213,12 +213,12 @@ if uncertainty_analyzation_plots_FLAG
 
     figure('Name','volume phase')
     tiledlayout("flow","TileSpacing","compact")
-    for ii=length(volume):-1:1
+    for ii=length(data.volume):-1:1
         nexttile
 
-        stem(volume(ii).FFT.harmonic.frequencies,phase(volume(ii).FFT.harmonic.metas.Value))
+        stem(data.volume(ii).FFT.harmonic.frequencies, phase(data.volume(ii).FFT.harmonic.metas.Value))
         hold on
-        errorbar(volume(ii).FFT.harmonic.frequencies,phase(volume(ii).FFT.harmonic.metas.Value),phase(volume(ii).FFT.harmonic.metas.StdUnc),'LineStyle','none')
+        errorbar(data.volume(ii).FFT.harmonic.frequencies, phase(data.volume(ii).FFT.harmonic.metas.Value), phase(data.volume(ii).FFT.harmonic.metas.StdUnc),'LineStyle','none')
         box off
         ylim([-pi/2,pi/2])
     end
@@ -226,7 +226,7 @@ if uncertainty_analyzation_plots_FLAG
     % initiate figure
     figure('Name','pressure phase')
     tiledlayout("flow","TileSpacing","compact")
-    for ii=length(pressure):-1:1
+    for ii=length(data.pressure):-1:1
         nexttile
 
         stem(data.pressure(ii).FFT.harmonic.frequencies, phase(data.pressure(ii).FFT.harmonic.metas.Value))
@@ -238,7 +238,7 @@ if uncertainty_analyzation_plots_FLAG
 
     figure('Name','pressure abs')
     tiledlayout("flow","TileSpacing","compact")
-    for ii=length(pressure):-1:1
+    for ii=length(data.pressure):-1:1
         nexttile
         stem(data.pressure(ii).FFT.harmonic.frequencies, abs(data.pressure(ii).FFT.harmonic.metas.Value))
         hold on
